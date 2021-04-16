@@ -1,15 +1,117 @@
 <html><head>
     <title>INFO 3300/5100 - Project 2</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
     <style>
-
     </style>
 
 </head>
 
 <body>
+  <svg id="choropleth" height="800" width="1000" style="margin:20px" />
     <script>
+    const svg = d3.select("#choropleth");
+    const width = svg.attr("width");
+    const height = svg.attr("height");
+    const margin = { top: 20, right: 20, bottom: 20, left:20};
+    const mapWidth = width - margin.left - margin.right;
+    const mapHeight = height - margin.top - margin.bottom;
+    const map = svg.append("g")
+                    .attr("transform","translate("+margin.left+","+margin.top+")");
 
+    const requestData = async function (){
+
+      // world countries data
+      const countries_topo = await d3.json("./countries-110m.json");
+      console.log(countries_topo);
+
+      //  projecton and path for world countries
+      var countries = topojson.feature(countries_topo, countries_topo.objects.countries);
+      var countriesMesh = topojson.mesh(countries_topo, countries_topo.objects.countries);
+      var landMesh = topojson.mesh(countries_topo, countries_topo.objects.land);
+      console.log(countries);
+
+      var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
+      var path = d3.geoPath().projection(projection);
+
+
+      // clean netflix data
+      const netflix_titles = await d3.csv("./netflix_titles.csv");
+      console.log(netflix_titles);
+
+      // release year extent
+      const release_year_extent = d3.extent(netflix_titles, d => d.release_year);
+      console.log("release year extent", release_year_extent);
+
+
+      // create a dictionary for each valid year called data, in the form of
+      // data = {... 2019:{num_titles:30, num_countries:2, count:{country:20, country2:10}}...}
+      var data = {};
+      for (i = release_year_extent[0]; i <= release_year_extent[1]; i++) {
+        data[i] = {};
+        data[i]["num_titles"] = 0;
+        data[i]["num_countries"] = 0;
+        data[i]["count"] = {};
+      }
+
+      netflix_titles.forEach( (d, i) => {
+        if (d.country === "" ) {
+          netflix_titles.splice(i, 1);
+        }
+        else {
+          data[d.release_year]["num_titles"] += 1;
+          let release_countries = (d.country).split(', ');
+          let dict = data[d.release_year]["count"];
+          release_countries.forEach( (country, i) => {
+            if (country in dict){
+              dict[country] += 1;
+            } else{
+              dict[country] = 1;
+              data[d.release_year]["num_countries"] += 1;
+            };
+          });
+        };
+
+      });
+      console.log(data);
+
+
+      // var Total_Biodiversity = nyb.Total_Biodiversity_allvalues;
+      // console.log("total biodiversity values", Total_Biodiversity);
+      //
+      // var colors = ["rgb(244, 71, 71)", "rgb(244, 174, 174)", "rgb(231, 231, 231)",
+      // "rgb(154, 245, 254)", "rgb(0, 182, 207)"];
+      // const colorScale = d3.scaleQuantile().domain(Total_Biodiversity).range(colors);
+      //
+      //
+      map.selectAll("path.country").data(countries.features)
+         .join("path")
+         .attr("class", "country")
+         // .attr("note", (d, i) => d.properties.NAME)
+         .attr("d", path);
+
+      map.append("path").datum(countriesMesh)
+         .attr("class","outline")
+         .attr("d", path);
+
+      // map.append("path").datum(stateMesh)
+      //   .attr("class","stateOutline")
+      //   .attr("d", path);
+      //
+      // map.selectAll(".county").style("fill", d => colorScale( d.properties.Total_Biodiversity) );
+      //
+      //
+      // const tower = projection([-76.4850, 42.4476]);
+      // console.log("tower", tower);
+      // map.append("circle")
+      //    .attr("cx", tower[0])
+      //    .attr("cy", tower[1])
+      //    .attr("fill", "black" )
+      //    .attr("r", 5);
+
+
+    }
+    requestData();
     </script>
 
 </body>
