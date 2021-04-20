@@ -40,14 +40,14 @@
       console.log(netflix_titles);
 
       // release year extent
-      const release_year_extent = d3.extent(netflix_titles, d => d.release_year);
-      console.log("release year extent", release_year_extent);
+      const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
+      console.log("year added extent", year_added_extent);
 
 
       // create a dictionary for each valid year called data, in the form of
       // data = {... 2019:{num_titles:30, num_countries:2, count:{country:20, country2:10}}...}
       var data = {};
-      for (i = release_year_extent[0]; i <= release_year_extent[1]; i++) {
+      for (i = year_added_extent[0]; i <= year_added_extent[1]; i++) {
         data[i] = {};
         data[i]["num_titles"] = 0;
         data[i]["num_countries"] = 0;
@@ -57,32 +57,34 @@
       }
 
       netflix_titles.forEach( (d, i) => {
-        if ((d.country === "")||(d['listed_in'] === ""))  {
+        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === ""))  {
           netflix_titles.splice(i, 1);
         }
         else {
-          data[d.release_year]["num_titles"] += 1;
-          
+          year_added = d.date_added.split(', ')[1];
+          // console.log(d.release_year, year_added);
+          data[year_added]["num_titles"] += 1;
+
           let release_countries = (d.country).split(', ');
-          let dict = data[d.release_year]["countriesCount"];
+          let dict = data[year_added]["countriesCount"];
           release_countries.forEach( (country, i) => {
             if (country in dict){
               dict[country] += 1;
             } else{
               dict[country] = 1;
-              data[d.release_year]["num_countries"] += 1;
+              data[year_added]["num_countries"] += 1;
             };
           });
 
           let genres = d['listed_in'].split(", ");
-          let genreDict = data[d.release_year]["genresCount"];
+          let genreDict = data[year_added]["genresCount"];
           genres.forEach( (genre,i) => {
             if (genre in genreDict) {
               genreDict[genre] += 1;
             }
             else {
               genreDict[genre] = 1;
-              data[d.release_year]["num_genres"] += 1;
+              data[year_added]["num_genres"] += 1;
             };
           });
         };
