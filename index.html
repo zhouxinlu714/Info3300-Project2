@@ -3,6 +3,21 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v3.min.js"></script>
     <style>
+    .country {
+      fill: rgb(227, 236, 240)
+    }
+
+    .outline {
+      stroke: white;
+      stroke-width: 1px;
+      fill: none;
+    }
+
+    .graticule {
+      stroke: #ECEDED;
+      stroke-width: 1px;
+      fill: none;
+    }
     </style>
 
 </head>
@@ -12,6 +27,10 @@
   <svg id="barchart" height="500" width="800" style="background:black"></svg>
 
     <script>
+    // import color legend
+    // import {legend, swatches} from "@d3/color-legend"
+    // import d3_colorLegend from "https://api.observablehq.com/@d3/color-legend.js?v=3";
+
     const svg = d3.select("#choropleth");
     const width = svg.attr("width");
     const height = svg.attr("height");
@@ -24,26 +43,33 @@
     const requestData = async function (){
 
       // world countries data
-      const countries_topo = await d3.json("./countries-110m.json");
-      console.log(countries_topo);
+      var countries_topo = await d3.json("./countries-110m.json");
+
+      // filter out Antarctica and Greenland
+      var filtered_countries = countries_topo.objects.countries.geometries;
+      filtered_countries = filtered_countries.filter(
+        d => d.properties.name !== "Antarctica" &&  d.properties.name !== "Greenland"
+      );
+      countries_topo.objects.countries.geometries = filtered_countries;
 
       //  projecton and path for world countries
       var countries = topojson.feature(countries_topo, countries_topo.objects.countries);
       var countriesMesh = topojson.mesh(countries_topo, countries_topo.objects.countries);
       var landMesh = topojson.mesh(countries_topo, countries_topo.objects.land);
-      console.log(countries);
+      console.log("countries", countries);
+
 
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
       var path = d3.geoPath().projection(projection);
+      var graticule = d3.geoGraticule10();
+      map.append("path").attr("class","graticule").attr("d", path(graticule) )
 
-      // clean netflix data 
+      // clean netflix data
       const netflix_titles = await d3.csv("./netflix_titles.csv");
       console.log(netflix_titles);
 
-      // release year extent
+      // year added extent
       const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
-      console.log("year added extent", year_added_extent);
-
 
       // create a dictionary for each valid year called data, in the form of
       // data = {... 2019:{num_titles:30, num_countries:2, count:{country:20, country2:10}}...}
@@ -68,12 +94,13 @@
         }
         else {
           year_added = d.date_added.split(', ')[1];
-          // console.log(d.release_year, year_added);
           data[year_added]["num_titles"] += 1;
 
           let release_countries = (d.country).split(', ');
           let dict = data[year_added]["countriesCount"];
           release_countries.forEach( (country, i) => {
+            if (country === "United States") country = "United States of America";
+            if (country === "Czech Republic") country = "Czechia";
             if (country in dict){
               dict[country] += 1;
             } else{
@@ -114,67 +141,57 @@
           };
         };
       });
-      console.log(data);
+      console.log("final data", data);
 
-      //All year dict
-
-
-
-
-
-      // var All_year = {};
-      // All_year["ratingsCount"] = {};
-      // data.forEach( (d, i) => {
-      //   let dict1 = All_year["ratingsCount"];
-      //     d['ratingsCount'].forEach( (rating, i) => {
-      //       if (rating in dict1){
-      //         console.log(dict1[rating]);
-      //         dict1[rating] = dict1[rating] + 1 ;
-      //       } else{
-      //         dict1[rating] = 1;
-      //         // data[year_added]["num_countries"] += 1;
-      //       };
-      //     });
-
-      // });
-      // console.log(All_year);
-
-      
-      // var Total_Biodiversity = nyb.Total_Biodiversity_allvalues;
-      // console.log("total biodiversity values", Total_Biodiversity);
-      //
-      // var colors = ["rgb(244, 71, 71)", "rgb(244, 174, 174)", "rgb(231, 231, 231)",
-      // "rgb(154, 245, 254)", "rgb(0, 182, 207)"];
-      // const colorScale = d3.scaleQuantile().domain(Total_Biodiversity).range(colors);
-      //
-      //
-      map.selectAll("path.country").data(countries.features)
+      // draw countries
+      map.selectAll("path.country")
+         .data(countries.features.filter(d => d.properties.name !== "Antarctica"
+                                     &&  d.properties.name !== "Greenland"))
          .join("path")
          .attr("class", "country")
-         // .attr("note", (d, i) => d.properties.NAME)
+         .attr("note", (d, i) => d.properties.name )
          .attr("d", path);
 
       map.append("path").datum(countriesMesh)
          .attr("class","outline")
          .attr("d", path);
 
-      // map.append("path").datum(stateMesh)
-      //   .attr("class","stateOutline")
-      //   .attr("d", path);
-      //
-      // map.selectAll(".county").style("fill", d => colorScale( d.properties.Total_Biodiversity) );
-      //
-      //
-      // const tower = projection([-76.4850, 42.4476]);
-      // console.log("tower", tower);
-      // map.append("circle")
-      //    .attr("cx", tower[0])
-      //    .attr("cy", tower[1])
-      //    .attr("fill", "black" )
-      //    .attr("r", 5);
+      // 2020 data
+      data2020 = data["2021"];
+      console.log(data2020);
 
-      //stacked chart
-      
+      // make colorscale based on title count in all years
+      var total_minMax = [0,0];
+      for (i = year_added_extent[0]; i <= year_added_extent[1]; i++) {
+        let num_titles_values =  Object.values(data[i].countriesCount) ;
+        let minMax = d3.extent(num_titles_values);
+        if (minMax[1] > total_minMax[1]) total_minMax = [0, minMax[1]];
+      };
+      const colorScale = d => d3.interpolateReds( d3.scaleSymlog()
+                                .domain([0, total_minMax[1]]).range([0,1])(d) );
+
+      var countries_count = data2020.countriesCount;
+      function titles_count (ctry) {
+        if (ctry in countries_count){
+          count = countries_count[ctry];
+        } else {
+          count = 0;
+        };
+        return count;
+      };
+
+      map.selectAll(".country")
+         .style("fill", d => colorScale(titles_count(d.properties.name)) );
+
+      // legend({
+      //   color: d3.scaleSymlog([0, total_minMax[1]], d3.interpolateReds),
+      //   title: "Title Count",
+      //   ticks: 10
+      //   // tickFormat: ".0s"
+      // })
+
+
+      // drawLegend(d3.select("#colorLegend"), colorScale);
 
     }
     requestData();
