@@ -26,6 +26,10 @@
   <svg id="choropleth" height="650" width="960" style="margin:20px" ></svg>
 
     <script>
+    // import color legend
+    // import {legend, swatches} from "@d3/color-legend"
+    // import d3_colorLegend from "https://api.observablehq.com/@d3/color-legend.js?v=3";
+
     const svg = d3.select("#choropleth");
     const width = svg.attr("width");
     const height = svg.attr("height");
@@ -129,12 +133,18 @@
          .attr("d", path);
 
       // 2020 data
-      data2020 = data["2020"];
+      data2020 = data["2021"];
       console.log(data2020);
-      var num_titles_values =  Object.values(data2020.countriesCount) ;
-      var minMax = d3.extent(num_titles_values);
-      const colorScale = d => d3.interpolateOrRd( d3.scaleSymlog()
-                                .domain([0, minMax[1]]).range([0,1])(d) );
+
+      // make colorscale based on title count in all years
+      var total_minMax = [0,0];
+      for (i = year_added_extent[0]; i <= year_added_extent[1]; i++) {
+        let num_titles_values =  Object.values(data[i].countriesCount) ;
+        let minMax = d3.extent(num_titles_values);
+        if (minMax[1] > total_minMax[1]) total_minMax = [0, minMax[1]];
+      };
+      const colorScale = d => d3.interpolateReds( d3.scaleSymlog()
+                                .domain([0, total_minMax[1]]).range([0,1])(d) );
 
       var countries_count = data2020.countriesCount;
       function titles_count (ctry) {
@@ -148,6 +158,13 @@
 
       map.selectAll(".country")
          .style("fill", d => colorScale(titles_count(d.properties.name)) );
+
+      // legend({
+      //   color: d3.scaleSymlog([0, total_minMax[1]], d3.interpolateReds),
+      //   title: "Title Count",
+      //   ticks: 10
+      //   // tickFormat: ".0s"
+      // })
 
 
       // drawLegend(d3.select("#colorLegend"), colorScale);
