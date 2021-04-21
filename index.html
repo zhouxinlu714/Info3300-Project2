@@ -52,15 +52,15 @@
       const netflix_titles = await d3.csv("./netflix_titles.csv");
       console.log(netflix_titles);
 
-      // release year extent
-      const release_year_extent = d3.extent(netflix_titles, d => d.release_year);
-      console.log("release year extent", release_year_extent);
+      // year added extent
+      const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
+      console.log("year added extent", year_added_extent);
 
 
       // create a dictionary for each valid year called data, in the form of
       // data = {... 2019:{num_titles:30, num_countries:2, count:{country:20, country2:10}}...}
       var data = {};
-      for (i = release_year_extent[0]; i <= release_year_extent[1]; i++) {
+      for (i = year_added_extent[0]; i <= year_added_extent[1]; i++) {
         data[i] = {};
         data[i]["num_titles"] = 0;
         data[i]["num_countries"] = 0;
@@ -70,37 +70,49 @@
       }
 
       netflix_titles.forEach( (d, i) => {
-        if ((d.country === "")||(d['listed_in'] === ""))  {
+        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === ""))  {
           netflix_titles.splice(i, 1);
         }
         else {
-          data[d.release_year]["num_titles"] += 1;
-          
+          year_added = d.date_added.split(', ')[1];
+          // console.log(d.release_year, year_added);
+          data[year_added]["num_titles"] += 1;
+
           let release_countries = (d.country).split(', ');
-          let dict = data[d.release_year]["countriesCount"];
+          let dict = data[year_added]["countriesCount"];
           release_countries.forEach( (country, i) => {
             if (country in dict){
               dict[country] += 1;
             } else{
               dict[country] = 1;
-              data[d.release_year]["num_countries"] += 1;
+              data[year_added]["num_countries"] += 1;
             };
           });
 
           let genres = d['listed_in'].split(", ");
-          let genreDict = data[d.release_year]["genresCount"];
+          let genreDict = data[year_added]["genresCount"];
           genres.forEach( (genre,i) => {
             if (genre in genreDict) {
               genreDict[genre] += 1;
             }
             else {
               genreDict[genre] = 1;
-              data[d.release_year]["num_genres"] += 1;
+              data[year_added]["num_genres"] += 1;
             };
           });
         };
 
       });
+      var topFive = Object.keys(data[year_added]["genresCount"]).map(function(key) {
+              return [[year_added], data[year_added]["genresCount"]];
+          });
+          
+      topFive.sort(function(first, second) {
+          return second[1] - first[1];
+          });
+
+      console.log(topFive.slice(0, 5));
+
       console.log(data);
 
 
@@ -137,18 +149,18 @@
       //    .attr("fill", "black" )
       //    .attr("r", 5);
 
-      let sizeScale = d3.scaleLinear().domain(d3.extent(data, d => data[d.release_year]["genresCount"])).range( [1,2] );
-      let colorScale = d3.scaleLinear().domain(d3.extent(data, d => data[d.release_year]["genresCount"])).range( ["black", "red"] );
+    //   let sizeScale = d3.scaleLinear().domain(d3.extent(data, d => data[d.release_year]["genresCount"])).range( [1,2] );
+    //   let colorScale = d3.scaleLinear().domain(d3.extent(data, d => data[d.release_year]["genresCount"])).range( ["black", "red"] );
       
-      data.forEach( (d,i) => {
-      let circle = bubbleChart.append("circle")
-                            .attr("r", sizeScale(d['genresCount']))
-                            .attr("fill", colorScale (d['genresCount']))
-                            .attr("index", i)
-                            .attr("opacity", '0.8')
-                            // .attr("label", d['title'] )
-                            // .attr("genre", d['genresCount'] );
-                          });
+    //   data.forEach( (d,i) => {
+    //   let circle = bubbleChart.append("circle")
+    //                         .attr("r", sizeScale(d['genresCount']))
+    //                         .attr("fill", colorScale (d['genresCount']))
+    //                         .attr("index", i)
+    //                         .attr("opacity", '0.8')
+    //                         // .attr("label", d['title'] )
+    //                         // .attr("genre", d['genresCount'] );
+    //                       });
 
 
     }
