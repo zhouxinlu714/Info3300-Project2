@@ -9,6 +9,8 @@
 
 <body>
   <svg id="choropleth" height="800" width="1000" style="margin:20px" ></svg>
+  <svg id="barchart" height="500" width="800" style="background:black"></svg>
+
     <script>
     const svg = d3.select("#choropleth");
     const width = svg.attr("width");
@@ -34,8 +36,7 @@
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
       var path = d3.geoPath().projection(projection);
 
-
-      // clean netflix data
+      // clean netflix data 
       const netflix_titles = await d3.csv("./netflix_titles.csv");
       console.log(netflix_titles);
 
@@ -52,12 +53,17 @@
         data[i]["num_titles"] = 0;
         data[i]["num_countries"] = 0;
         data[i]["num_genres"] = 0;
+        data[i]["num_ratings"] = 0;
         data[i]["countriesCount"] = {};
         data[i]["genresCount"] = {};
+        data[i]["ratingsCount"] = {};
       }
 
+      data['All_year'] = {};
+      data['All_year']["ratingsCount"] = {};
+      // console.log(data)
       netflix_titles.forEach( (d, i) => {
-        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === ""))  {
+        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === "")|| (d.rating === ""))  {
           netflix_titles.splice(i, 1);
         }
         else {
@@ -87,12 +93,53 @@
               data[year_added]["num_genres"] += 1;
             };
           });
-        };
 
+          let rating = d.rating;
+          let ratingDict = data[year_added]["ratingsCount"];
+          if (rating in ratingDict) {
+            ratingDict[rating] += 1;
+          }
+          else {
+            ratingDict[rating] = 1;
+            data[year_added]["num_ratings"] += 1;
+          };
+
+          //count rating for whole years
+          let Allyear_ratingDict = data['All_year']["ratingsCount"];
+          if (rating in Allyear_ratingDict) {
+            Allyear_ratingDict[rating] += 1;
+          }
+          else {
+            Allyear_ratingDict[rating] = 1;
+          };
+        };
       });
       console.log(data);
 
+      //All year dict
 
+
+
+
+
+      // var All_year = {};
+      // All_year["ratingsCount"] = {};
+      // data.forEach( (d, i) => {
+      //   let dict1 = All_year["ratingsCount"];
+      //     d['ratingsCount'].forEach( (rating, i) => {
+      //       if (rating in dict1){
+      //         console.log(dict1[rating]);
+      //         dict1[rating] = dict1[rating] + 1 ;
+      //       } else{
+      //         dict1[rating] = 1;
+      //         // data[year_added]["num_countries"] += 1;
+      //       };
+      //     });
+
+      // });
+      // console.log(All_year);
+
+      
       // var Total_Biodiversity = nyb.Total_Biodiversity_allvalues;
       // console.log("total biodiversity values", Total_Biodiversity);
       //
@@ -126,6 +173,8 @@
       //    .attr("fill", "black" )
       //    .attr("r", 5);
 
+      //stacked chart
+      
 
     }
     requestData();
