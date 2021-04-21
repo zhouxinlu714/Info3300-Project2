@@ -103,17 +103,21 @@
         };
 
       });
-      var topFive = Object.keys(data[year_added]["genresCount"]).map(function(key) {
-              return [[year_added], data[year_added]["genresCount"]];
-          });
-          
-      topFive.sort(function(first, second) {
-          return second[1] - first[1];
-          });
-
-      console.log(topFive.slice(0, 5));
 
       console.log(data);
+
+      for (const year_added in data) {
+        for (const genresCount in year_added) {
+            var topFive = Object.keys(data[year_added]["genresCount"]).map(function(key) {
+                return [key, data[year_added]["genresCount"][key]];
+            });
+            
+            topFive.sort(function(first, second) {
+                return second[1] - first[1];
+            });
+        }
+        console.log(year_added, topFive.slice(0, 5));
+        };
 
 
       // var Total_Biodiversity = nyb.Total_Biodiversity_allvalues;
