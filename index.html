@@ -133,7 +133,7 @@
       console.log(data2020);
       var num_titles_values =  Object.values(data2020.countriesCount) ;
       var minMax = d3.extent(num_titles_values);
-      const colorScale = d => d3.interpolateYlOrRd( d3.scaleSymlog()
+      const colorScale = d => d3.interpolateOrRd( d3.scaleSymlog()
                                 .domain([0, minMax[1]]).range([0,1])(d) );
 
       var countries_count = data2020.countriesCount;
