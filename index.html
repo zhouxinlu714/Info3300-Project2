@@ -2,6 +2,7 @@
     <title>INFO 3300/5100 - Project 2</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <script src="color_legend.js"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
@@ -20,13 +21,13 @@
     }
 
     .outline {
-      stroke: white;
+      stroke: black;
       stroke-width: 1px;
       fill: none;
     }
 
     .graticule {
-      stroke: #ECEDED;
+      stroke: darkgrey;
       stroke-width: 1px;
       fill: none;
     }
@@ -38,7 +39,7 @@
 
 <body>
   <h1>NETFLIX</h1>
-  <svg id="choropleth" height="800" width="1000" style="margin:20px" ></svg>
+  <svg id="choropleth" height="700" width="960" style="margin:20px" ></svg>
   <svg id="barchart" height="500" width="800" style="background:black"></svg>
 
     <script>
@@ -89,7 +90,7 @@
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
       var path = d3.geoPath().projection(projection);
       var graticule = d3.geoGraticule10();
-      map.append("path").attr("class","graticule").attr("d", path(graticule) )
+      // map.append("path").attr("class","graticule").attr("d", path(graticule) )
 
       // clean netflix data
       const netflix_titles = await d3.csv("./netflix_titles.csv");
@@ -210,6 +211,16 @@
       map.selectAll(".country")
          .style("fill", d => colorScale(titles_count(d.properties.name)) );
 
+     // draw color legend
+     var legend_x = d3.scaleSymlog()
+                     .domain([0, total_minMax[1]])
+                     .range([margin.left+mapWidth*0.05, margin.left+mapWidth*0.9]);
+
+     map.append("g")
+         .attr("transform", `translate(0,${height-margin.bottom})`)
+         .call(rampHorizontal(legend_x, colorScale))
+         .call(d3.axisBottom(legend_x));
+
 
       //bar chart
       //dict => array
@@ -240,7 +251,7 @@
         .data(ratingArray)
         .enter()
         .append("g");
-        
+
       bars.append("rect").attr("class", "bar")
         .attr("width", function(d) {return x(d.value); } )
         .attr("y", function(d) { return y(d.rating); })
@@ -272,16 +283,6 @@
                 .style("fill", "white")
                 .text("MOVIE AND TV SHOWS BY RATING");
 
-      
-      // legend({
-      //   color: d3.scaleSymlog([0, total_minMax[1]], d3.interpolateReds),
-      //   title: "Title Count",
-      //   ticks: 10
-      //   // tickFormat: ".0s"
-      // })
-
-
-      // drawLegend(d3.select("#colorLegend"), colorScale);
 
     }
     requestData();
