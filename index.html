@@ -45,11 +45,12 @@
     // import color legend
     // import {legend, swatches} from "@d3/color-legend"
     // import d3_colorLegend from "https://api.observablehq.com/@d3/color-legend.js?v=3";
+    // import "color_legend.js";
 
     const svg = d3.select("#choropleth");
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margin = { top: 20, right: 20, bottom: 20, left:20};
+    const margin = { top: 20, right: 20, bottom: 40, left:20};
     const mapWidth = width - margin.left - margin.right;
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
@@ -183,7 +184,7 @@
          .attr("d", path);
 
       // 2020 data
-      data2020 = data["2021"];
+      data2020 = data["2020"];
       console.log(data2020);
 
       // make colorscale based on title count in all years
