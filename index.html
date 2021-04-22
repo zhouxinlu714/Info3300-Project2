@@ -3,28 +3,43 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v3.min.js"></script>
     <script src="color_legend.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
+    body{
+      background-color: black;
+    }
+
+    H1{
+      font-family: 'Bebas Neue', cursive;
+      font-size: 60px;
+      color: #E50914;
+      text-align: center;
+    }
     .country {
       fill: rgb(227, 236, 240)
     }
 
     .outline {
-      stroke: white;
+      stroke: black;
       stroke-width: 1px;
       fill: none;
     }
 
     .graticule {
-      stroke: #ECEDED;
+      stroke: darkgrey;
       stroke-width: 1px;
       fill: none;
     }
+
+    .bar { fill: rgb(228, 61, 61); }
     </style>
 
 </head>
 
 <body>
-  <svg id="choropleth" height="800" width="1000" style="margin:20px" ></svg>
+  <h1>NETFLIX</h1>
+  <svg id="choropleth" height="700" width="960" style="margin:20px" ></svg>
   <svg id="barchart" height="500" width="800" style="background:black"></svg>
 
     <script>
@@ -41,6 +56,17 @@
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
                     .attr("transform","translate("+margin.left+","+margin.top+")");
+
+    //rating bar chart
+    const rating_svg = d3.select("#barchart");
+    const width2 = rating_svg.attr("width");
+    const height2 = rating_svg.attr("height");
+    const margin2 = { top: 50, right: 50, bottom: 20, left:60};
+    const ratingWidth = width2 - margin2.left - margin2.right;
+    const ratingHeight = height2  - margin2.top - margin2.bottom;
+    const rating_barchart = rating_svg.append("g")
+                    .attr("transform","translate("+margin2.left+","+margin2.top+")");
+
 
     const requestData = async function (){
 
@@ -64,7 +90,7 @@
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
       var path = d3.geoPath().projection(projection);
       var graticule = d3.geoGraticule10();
-      map.append("path").attr("class","graticule").attr("d", path(graticule) )
+      // map.append("path").attr("class","graticule").attr("d", path(graticule) )
 
       // clean netflix data
       const netflix_titles = await d3.csv("./netflix_titles.csv");
@@ -185,26 +211,79 @@
       map.selectAll(".country")
          .style("fill", d => colorScale(titles_count(d.properties.name)) );
 
-      // draw color legend
-      var legend_x = d3.scaleSymlog()
-                      .domain([0, total_minMax[1]])
-                      .range([margin.left+mapWidth*0.05, margin.left+mapWidth*0.9]);
+     // draw color legend
+     var legend_x = d3.scaleSymlog()
+                     .domain([0, total_minMax[1]])
+                     .range([margin.left+mapWidth*0.05, margin.left+mapWidth*0.9]);
 
-      map.append("g")
-          .attr("transform", `translate(0,${height-margin.bottom})`)
-          .call(rampHorizontal(legend_x, colorScale))
-          .call(d3.axisBottom(legend_x));
+     map.append("g")
+         .attr("transform", `translate(0,${height-margin.bottom})`)
+         .call(rampHorizontal(legend_x, colorScale))
+         .call(d3.axisBottom(legend_x));
 
-      map.append("text")
-         .attr("x", margin.left+mapWidth*0.05)
-         .attr("y", )
-          .attr("text-anchor","middle")
-          .attr("dominant-baseline","hanging")
-          .attr("font-family", "Arial")
-          .attr("font-size","15px")
-          .attr("x",xScale( l ))
-          .attr('y',height-16)
-          .text(l);
+
+      //bar chart
+      //dict => array
+      let Allyear_ratingDict = data['All_year']['ratingsCount']
+      console.log(Object.entries(Allyear_ratingDict))
+      let ratingArray = [];
+      for (const [rating, value] of Object.entries(Allyear_ratingDict)) {
+        ratingArray.push({
+          'rating': rating,
+          'value': value
+        })
+      }
+      console.log(ratingArray)
+      ratingArray = ratingArray.sort(function (a, b) {
+            return d3.ascending(a.value, b.value);
+        })
+
+      var y = d3.scaleBand()
+          .domain(ratingArray.map(function(d) { return d.rating; }))
+          .range([ratingHeight, 0])
+          .padding(0.1);
+
+      var x = d3.scaleLinear()
+          .domain([0, d3.max(ratingArray, function(d){ return d.value; })])
+          .range([0, ratingWidth]);
+
+      var bars = rating_barchart.selectAll(".bar")
+        .data(ratingArray)
+        .enter()
+        .append("g");
+
+      bars.append("rect").attr("class", "bar")
+        .attr("width", function(d) {return x(d.value); } )
+        .attr("y", function(d) { return y(d.rating); })
+        .attr("height", y.bandwidth());
+
+      let leftAxis = d3.axisLeft(y).tickSize(0);
+      rating_barchart.append("g")
+                .attr("class", "y axis")
+                .attr("color", 'white')
+                .call(leftAxis);
+
+      bars.append("text")
+        .attr("class", "value")
+        .text(function(d) { console.log(d.value); return d.value;})
+        .attr("x", function(d){ return x(d.value) + 15;})
+        .attr("y", function(d){return y(d.rating) + y.bandwidth() * (0.5 + 0.1);})
+        .style("font-family" , "Arial")
+        .style("font-size", "13px")
+        .style("fill", "white")
+        .attr("text-anchor", "middle");
+
+       // add title
+       rating_svg.append("text")
+                .attr("x", width2 / 2)
+                .attr("y", margin2.top / 2 )
+                .attr("text-anchor", "middle")
+                .style("font-family" , "Arial")
+                .style("font-size", "20px")
+                .style("fill", "white")
+                .text("MOVIE AND TV SHOWS BY RATING");
+
+
     }
     requestData();
     </script>
