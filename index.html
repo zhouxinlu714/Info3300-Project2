@@ -24,7 +24,8 @@
 </head>
 
 <body>
-  <svg id="choropleth" height="700" width="960" style="margin:20px" ></svg>
+  <svg id="choropleth" height="800" width="1000" style="margin:20px" ></svg>
+  <svg id="barchart" height="500" width="800" style="background:black"></svg>
 
     <script>
     // import color legend
@@ -80,12 +81,17 @@
         data[i]["num_titles"] = 0;
         data[i]["num_countries"] = 0;
         data[i]["num_genres"] = 0;
+        data[i]["num_ratings"] = 0;
         data[i]["countriesCount"] = {};
         data[i]["genresCount"] = {};
+        data[i]["ratingsCount"] = {};
       }
 
+      data['All_year'] = {};
+      data['All_year']["ratingsCount"] = {};
+      // console.log(data)
       netflix_titles.forEach( (d, i) => {
-        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === ""))  {
+        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === "")|| (d.rating === ""))  {
           netflix_titles.splice(i, 1);
         }
         else {
@@ -116,8 +122,26 @@
               data[year_added]["num_genres"] += 1;
             };
           });
-        };
 
+          let rating = d.rating;
+          let ratingDict = data[year_added]["ratingsCount"];
+          if (rating in ratingDict) {
+            ratingDict[rating] += 1;
+          }
+          else {
+            ratingDict[rating] = 1;
+            data[year_added]["num_ratings"] += 1;
+          };
+
+          //count rating for whole years
+          let Allyear_ratingDict = data['All_year']["ratingsCount"];
+          if (rating in Allyear_ratingDict) {
+            Allyear_ratingDict[rating] += 1;
+          }
+          else {
+            Allyear_ratingDict[rating] = 1;
+          };
+        };
       });
       console.log("final data", data);
 
