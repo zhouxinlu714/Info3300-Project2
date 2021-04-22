@@ -2,6 +2,7 @@
     <title>INFO 3300/5100 - Project 2</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <script src="color_legend.js"></script>
     <style>
     .country {
       fill: rgb(227, 236, 240)
@@ -23,17 +24,19 @@
 </head>
 
 <body>
-  <svg id="choropleth" height="650" width="960" style="margin:20px" ></svg>
+  <svg id="choropleth" height="800" width="1000" style="margin:20px" ></svg>
+  <svg id="barchart" height="500" width="800" style="background:black"></svg>
 
     <script>
     // import color legend
     // import {legend, swatches} from "@d3/color-legend"
     // import d3_colorLegend from "https://api.observablehq.com/@d3/color-legend.js?v=3";
+    // import "color_legend.js";
 
     const svg = d3.select("#choropleth");
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margin = { top: 20, right: 20, bottom: 20, left:20};
+    const margin = { top: 20, right: 20, bottom: 40, left:20};
     const mapWidth = width - margin.left - margin.right;
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
@@ -78,12 +81,17 @@
         data[i]["num_titles"] = 0;
         data[i]["num_countries"] = 0;
         data[i]["num_genres"] = 0;
+        data[i]["num_ratings"] = 0;
         data[i]["countriesCount"] = {};
         data[i]["genresCount"] = {};
+        data[i]["ratingsCount"] = {};
       }
 
+      data['All_year'] = {};
+      data['All_year']["ratingsCount"] = {};
+      // console.log(data)
       netflix_titles.forEach( (d, i) => {
-        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === ""))  {
+        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === "")|| (d.rating === ""))  {
           netflix_titles.splice(i, 1);
         }
         else {
@@ -114,8 +122,26 @@
               data[year_added]["num_genres"] += 1;
             };
           });
-        };
 
+          let rating = d.rating;
+          let ratingDict = data[year_added]["ratingsCount"];
+          if (rating in ratingDict) {
+            ratingDict[rating] += 1;
+          }
+          else {
+            ratingDict[rating] = 1;
+            data[year_added]["num_ratings"] += 1;
+          };
+
+          //count rating for whole years
+          let Allyear_ratingDict = data['All_year']["ratingsCount"];
+          if (rating in Allyear_ratingDict) {
+            Allyear_ratingDict[rating] += 1;
+          }
+          else {
+            Allyear_ratingDict[rating] = 1;
+          };
+        };
       });
       console.log("final data", data);
 
@@ -133,7 +159,7 @@
          .attr("d", path);
 
       // 2020 data
-      data2020 = data["2021"];
+      data2020 = data["2020"];
       console.log(data2020);
 
       // make colorscale based on title count in all years
@@ -159,16 +185,26 @@
       map.selectAll(".country")
          .style("fill", d => colorScale(titles_count(d.properties.name)) );
 
-      // legend({
-      //   color: d3.scaleSymlog([0, total_minMax[1]], d3.interpolateReds),
-      //   title: "Title Count",
-      //   ticks: 10
-      //   // tickFormat: ".0s"
-      // })
+      // draw color legend
+      var legend_x = d3.scaleSymlog()
+                      .domain([0, total_minMax[1]])
+                      .range([margin.left+mapWidth*0.05, margin.left+mapWidth*0.9]);
 
+      map.append("g")
+          .attr("transform", `translate(0,${height-margin.bottom})`)
+          .call(rampHorizontal(legend_x, colorScale))
+          .call(d3.axisBottom(legend_x));
 
-      // drawLegend(d3.select("#colorLegend"), colorScale);
-
+      map.append("text")
+         .attr("x", margin.left+mapWidth*0.05)
+         .attr("y", )
+          .attr("text-anchor","middle")
+          .attr("dominant-baseline","hanging")
+          .attr("font-family", "Arial")
+          .attr("font-size","15px")
+          .attr("x",xScale( l ))
+          .attr('y',height-16)
+          .text(l);
     }
     requestData();
     </script>
