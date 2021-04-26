@@ -148,9 +148,16 @@
         data[i]["ratingsCount"] = {};
       }
 
+      // initiate data for all years
       data['All_year'] = {};
+      data['All_year']["num_titles"] = 0;
+      data['All_year']["num_countries"] = 0;
+      data['All_year']["num_genres"] = 0;
+      data['All_year']["num_ratings"] = 0;
+      data['All_year']["countriesCount"] = {};
+      data['All_year']["genresCount"] = {};
       data['All_year']["ratingsCount"] = {};
-      // console.log(data)
+
       netflix_titles.forEach( (d, i) => {
         if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === "")|| (d.rating === ""))  {
           netflix_titles.splice(i, 1);
@@ -158,9 +165,11 @@
         else {
           year_added = d.date_added.split(', ')[1];
           data[year_added]["num_titles"] += 1;
+          data['All_year']["num_titles"] += 1;
 
           let release_countries = (d.country).split(', ');
           let dict = data[year_added]["countriesCount"];
+          let dict_all = data['All_year']["countriesCount"];
           release_countries.forEach( (country, i) => {
             if (country === "United States") country = "United States of America";
             if (country === "Czech Republic") country = "Czechia";
@@ -170,10 +179,17 @@
               dict[country] = 1;
               data[year_added]["num_countries"] += 1;
             };
+            if (country in dict_all){
+              dict_all[country] += 1;
+            } else{
+              dict_all[country] = 1;
+              data['All_year']["num_countries"] += 1;
+            };
           });
 
           let genres = d['listed_in'].split(", ");
           let genreDict = data[year_added]["genresCount"];
+          let genreDict_all = data["All_year"]["genresCount"];
           genres.forEach( (genre,i) => {
             if (genre in genreDict) {
               genreDict[genre] += 1;
@@ -181,6 +197,13 @@
             else {
               genreDict[genre] = 1;
               data[year_added]["num_genres"] += 1;
+            };
+            if (genre in genreDict_all) {
+              genreDict_all[genre] += 1;
+            }
+            else {
+              genreDict_all[genre] = 1;
+              data['All_year']["num_genres"] += 1;
             };
           });
 
@@ -201,6 +224,7 @@
           }
           else {
             Allyear_ratingDict[rating] = 1;
+            data['All_year']['num_ratings']+=1;
           };
         };
       });
