@@ -77,6 +77,7 @@
   <h1>NETFLIX</h1>
   <div id="slider" style="margin:50px"></div>
   <svg id="choropleth" height="700" width="940" style="margin:10px" ></svg>
+  <svg id="bubble" height="400" width="940" style="margin:10px" ></svg>
   <svg id="barchart" height="500" width="800" style="background:black"></svg>
 
     <script>
@@ -89,6 +90,16 @@
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
                     .attr("transform","translate("+margin.left+","+margin.top+")");
+
+    // Setting up the bubble chart
+    const bubble = d3.select("#bubble");
+    const bWidth = bubble.attr("width");
+    const bHeight = bubble.attr("height");
+    const bMargin = { top: 20, right: 20, bottom: 20, left:20};
+    const chartWidth = bWidth - bMargin.left - bMargin.right;
+    const chartHeight = bHeight - bMargin.top - bMargin.bottom;
+    const bubbleChart = bubble.append("g")
+                    .attr("transform","translate("+bMargin.left+","+bMargin.top+")");
 
     //rating bar chart
     const rating_svg = d3.select("#barchart");
