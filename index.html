@@ -139,7 +139,7 @@
       var countries = topojson.feature(countries_topo, countries_topo.objects.countries);
       var countriesMesh = topojson.mesh(countries_topo, countries_topo.objects.countries);
       var landMesh = topojson.mesh(countries_topo, countries_topo.objects.land);
-      console.log("countries", countries);
+      // console.log("countries", countries);
 
 
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
@@ -153,7 +153,7 @@
 
       // year added extent
       const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
-      console.log("added year extent", year_added_extent)
+      // console.log("added year extent", year_added_extent)
 
 
       // create a dictionary for each valid year called data, in the form of
@@ -251,7 +251,7 @@
         };
       });
 
-      console.log(data);
+      // console.log(data);
 
       for (const year_added in data) {
         for (const genresCount in year_added) {
@@ -263,10 +263,10 @@
                 return second[1] - first[1];
             });
         }
-        console.log(year_added, topFive.slice(0, 5));
+        // console.log(year_added, topFive.slice(0, 5));
         };
 
-      console.log("final data", data);
+      // console.log("final data", data);
 
       // draw countries
       map.selectAll("path.country")
@@ -370,6 +370,7 @@
         .text("Title count (per country):");
 
      // Calculate the top 5 genres for each year
+     let genreObj = {};
      for (const year_added in data) {
         for (const genresCount in year_added) {
             var topFive = Object.keys(data[year_added]["genresCount"]).map(function(key) {
@@ -380,13 +381,49 @@
                 return second[1] - first[1];
             });
         }
-        console.log(year_added, topFive.slice(0, 5));
-     };
+        genreObj[year_added] = topFive.slice(0, 5);
+      };
+      console.log(genreObj)
+
+      // build scales
+      // size of circles based on number of titles 
+      // current_year
+      let slideryear = 2021;
+  
+      let genreExtent = []
+      genreExtent.push(genreObj[slideryear][genreObj[slideryear].length-1][1])
+      genreExtent.push(genreObj[slideryear][0][1])
+      console.log(genreExtent)
+
+      const genreScale = d3.scaleLinear().domain(genreExtent).range([1,10]);
+      // color of circles based on genre
+      // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
+
+      // initiate circles at random positions
+      for (let key in genreObj) {
+        genreObj[key].forEach( d => {
+          d.x = d3.randomUniform(10,chartWidth-10)();
+          d.y = d3.randomUniform(10,chartHeight-10)();
+        })
+      }
+      console.log(genreObj[slideryear]);
+      // draw the circles
+      bubbleChart.selectAll("circle").data(genreObj[slideryear])
+          .join("circle")
+          .attr("r", d => genreScale(d[1])) 
+          .attr("cx", d => d[key].x) // initially set random positions here, but the simulation doesn't use cx and cy from circles
+          .attr("cy", d => d[key].y) //  so we had to instead add the forEach above and use the x and y positions
+          .attr("fill", "red");
+      
+      // update based on slider
+      
+
+      console.log(genreArray)
 
       //bar chart
       //dict => array
       let Allyear_ratingDict = data['All_year']['ratingsCount']
-      console.log(Object.entries(Allyear_ratingDict))
+      // console.log(Object.entries(Allyear_ratingDict))
       let ratingArray = [];
       for (const [rating, value] of Object.entries(Allyear_ratingDict)) {
         ratingArray.push({
@@ -394,7 +431,7 @@
           'value': value
         })
       }
-      console.log(ratingArray)
+      // console.log(ratingArray)
       ratingArray = ratingArray.sort(function (a, b) {
             return d3.ascending(a.value, b.value);
         })
