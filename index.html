@@ -436,10 +436,19 @@
         let node = bubbleChart.selectAll('circle.genre')
                                 .data(root.children)
                                 // .enter().append('g')
-                                .join("circle").attr("class","genre")
-                                .attr("r", d => d.r)
-                                .style('fill','red')
-                                .attr("label", d => d.data)
+                                .join( enter => enter.append("circle").data( root.children, d => d.data )
+                                                    .attr("class","genre")
+                                                    .attr("r", d => d.r)
+                                                    .style('fill','red')
+                                                    .attr("label", d => d.data)
+                                                    .attr("opacity", 0)
+                                                    .call( enter => enter.transition().duration(200).attr("opacity",1)), 
+                                        update => update.call( update => update.transition().duration(200).attr("opacity",1)
+                                                        .attr("class","genre")
+                                                        .attr("r", d => d.r)
+                                                        .style('fill','red')
+                                                        .attr("label", d => d.data) ),
+                                        exit => exit.call( exit => exit.transition().duration(300).attr('opacity',0).remove() ) )
                                 .attr('transform', d => `translate(${d.x}, ${d.y})`);
 
         let labels = bubbleChart.selectAll('text.label')
@@ -467,7 +476,7 @@
     let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
                                      .padding(0.05);
     bottomAxis.scale(genreScale)
-    bottomAxisG.transition().call(bottomAxis);
+    bottomAxisG.transition().duration(200).call(bottomAxis);
 
     let genreNumber = d3.scaleLinear()
           // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
@@ -476,12 +485,22 @@
 
     genreChart.selectAll("rect.bar")
         .data(genreObj[slideryear])
-        .join('rect').attr('class','bar')
-        .attr('fill','red')
-        .attr("x", d => genreScale(d[0]))
-        .attr("y", d => genreNumber(d[1]))
-        .attr("height", d => genreNumber(0) - genreNumber(d[1]))
-        .attr("width", genreScale.bandwidth() ); 
+        .join( enter => enter.append('rect')
+                            .attr('class','bar')
+                            .attr('fill','red')
+                            .attr("x", d => genreScale(d[0]))
+                            .attr("y", d => genreNumber(d[1]))
+                            .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+                            .attr("width", genreScale.bandwidth() )
+                            .attr("opacity", 0)
+                            .call( enter => enter.transition().duration(200).attr("opacity",1)), 
+                update => update.call( update => update.transition().duration(200).attr("opacity",1)
+                                                .attr('fill','red')
+                                                .attr("x", d => genreScale(d[0]))
+                                                .attr("y", d => genreNumber(d[1]))
+                                                .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+                                                .attr("width", genreScale.bandwidth() )),
+                exit => exit.call( exit => exit.transition().duration(200).attr('opacity',0).remove() ) ); 
 
     genreChart.selectAll('text.label')
         .data(genreObj[slideryear])
