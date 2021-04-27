@@ -380,7 +380,7 @@
                 .style("fill", "white")
                 .text("TOP 5 GENRES FOR SELECTED YEAR");
      
-        // Calculate the top 5 genres for each year
+     // Calculate the top 5 genres for each year
      let genreObj = {};
      for (let year_added in data) {
         for (let genresCount in year_added) {
@@ -395,11 +395,21 @@
         genreObj[year_added] = topFive.slice(0, 5);
       };
       console.log(genreObj)
+
       // default circles are based on 2021
       drawCircles(2021);
+      
       // build scales
-      // size of circles based on number of titles 
-      // current_year
+      // let genreExtent = []
+      // genreExtent.push(genreObj[slideryear][genreObj[slideryear].length-1][1])
+      // genreExtent.push(genreObj[slideryear][0][1])
+      // console.log(genreExtent)
+
+      // const genreScale = d3.scaleLinear().domain(genreExtent).range([40,80]);
+      // color of circles based on genre
+      // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
+
+      // draw circles
       function drawCircles (slideryear) {
         let bubblePack = d => d3.pack()
                                     .size([chartWidth,chartHeight])
@@ -428,15 +438,6 @@
 
 
     // .data.name.substring(0, d.r / 3)
-  
-      // let genreExtent = []
-      // genreExtent.push(genreObj[slideryear][genreObj[slideryear].length-1][1])
-      // genreExtent.push(genreObj[slideryear][0][1])
-      // console.log(genreExtent)
-
-      // const genreScale = d3.scaleLinear().domain(genreExtent).range([40,80]);
-      // color of circles based on genre
-      // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
 
       //bar chart
       //dict => array
