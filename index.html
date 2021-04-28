@@ -84,7 +84,6 @@
       fill: rgb(255, 71, 71);
     }
 
-    .axis text,
     .slider text {
       font-size: 15px;
     }
@@ -102,8 +101,9 @@
       fill: rgb(255, 71, 71);
     }
 
-    .bar { fill: rgb(228, 61, 61); }
-
+    .bar { 
+      fill: rgb(228, 61, 61); 
+      }
 
     </style>
 
@@ -154,7 +154,7 @@
                     .attr("transform","translate("+gMargin.left+","+gMargin.top+")");
     const gAnnotations = genreBar.append("g").attr("id","annotations");
     
-    //rating bar chart
+    // Setting up the rating bar chart
     const svg2 = d3.select("#barchart");
     const width2 = svg2.attr("width");
     const height2 = svg2.attr("height");
@@ -345,13 +345,10 @@
                 return second[1] - first[1];
             });
         }
-        // console.log(year_added, topFive.slice(0, 5));
         };
 
-      // console.log("final data", data);
-
       console.log("final data", data);
-      console.log(data)
+
       // draw countries
       map.selectAll("path.country")
         .data(countries.features.filter(d => d.properties.name !== "Antarctica"
@@ -457,26 +454,6 @@
         .attr("y", height-margin.bottom-30)
         .attr("class", "legend_label")
         .text("Title count (per country):");
-
-     // create title for bubble chart
-     bubble.append("text")
-                .attr("x", bWidth / 2)
-                .attr("y", bMargin.top-5)
-                .attr("text-anchor", "middle")
-                .style("font-family" , "'Bebas Neue', cursive")
-                .style("font-size", "20px")
-                .style("fill", "white")
-                .text("TOP 5 GENRES FOR SELECTED YEAR");
-    
-     // create title for genre bar chart
-     genreBar.append("text")
-                .attr("x", gWidth / 2)
-                .attr("y", gMargin.top-5)
-                .attr("text-anchor", "middle")
-                .style("font-family" , "'Bebas Neue', cursive")
-                .style("font-size", "20px")
-                .style("fill", "white")
-                .text("TOP 5 GENRES FOR SELECTED YEAR");
      
      // Calculate the top 5 genres for each year
      let genreObj = {};
@@ -502,6 +479,17 @@
 
       // draw circles
       function drawCircles (slideryear) {
+
+        // create title for bubble chart
+        bubble.append("text")
+                .attr("x", bWidth / 2)
+                .attr("y", bMargin.top-5)
+                .attr("text-anchor", "middle")
+                .style("font-family" , "'Bebas Neue', cursive")
+                .style("font-size", "20px")
+                .style("fill", "white")
+                .text("TOP 5 GENRES FOR " + slideryear);
+
         let bubblePack = d => d3.pack()
                                     .size([chartWidth,chartHeight])
                                     .padding(2)(d3.hierarchy({children:genreObj[slideryear]}).sum(d => d[1]))
@@ -510,7 +498,6 @@
         
         let node = bubbleChart.selectAll('circle.genre')
                                 .data(root.children)
-                                // .enter().append('g')
                                 .join( enter => enter.append("circle").data( root.children, d => d.data )
                                                     .attr("class","genre")
                                                     .attr("r", d => d.r)
@@ -547,45 +534,55 @@
     // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
     // console.log(maxGenre)
     function drawBars (slideryear) {
-    let genres = d3.map(genreObj[slideryear], d => d[0]) 
-    let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
-                                     .padding(0.05);
-    gbottomAxis.scale(genreScale)
-    bottomAxisG.transition().duration(200).call(gbottomAxis);
-
-    let genreNumber = d3.scaleLinear()
-          // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
-          .domain([0,623])
-          .range([genreHeight,30]);
-
-    genreChart.selectAll("rect.bar")
-        .data(genreObj[slideryear])
-        .join( enter => enter.append('rect')
-                            .attr('class','bar')
-                            .attr('fill','red')
-                            .attr("x", d => genreScale(d[0]))
-                            .attr("y", d => genreNumber(d[1]))
-                            .attr("height", d => genreNumber(0) - genreNumber(d[1]))
-                            .attr("width", genreScale.bandwidth() )
-                            .attr("opacity", 0)
-                            .call( enter => enter.transition().duration(200).attr("opacity",1)), 
-                update => update.call( update => update.transition().duration(200).attr("opacity",1)
-                                                .attr('fill','red')
-                                                .attr("x", d => genreScale(d[0]))
-                                                .attr("y", d => genreNumber(d[1]))
-                                                .attr("height", d => genreNumber(0) - genreNumber(d[1]))
-                                                .attr("width", genreScale.bandwidth() )),
-                exit => exit.call( exit => exit.transition().duration(200).attr('opacity',0).remove() ) ); 
-
-    genreChart.selectAll('text.label')
-        .data(genreObj[slideryear])
-        .join("text").attr("class","label")
-        .text(d => d[1])
-        .style("font-size",15)
-        .style("fill","white")
-        .attr("x",d => genreScale(d[0]) + genreScale.bandwidth()/2)
-        .attr('y',d => genreNumber(d[1])-5);
+    
+    // create title for genre bar chart
+      genreBar.append("text")
+              .attr("x", gWidth / 2)
+              .attr("y", gMargin.top-5)
+              .attr("text-anchor", "middle")
+              .style("font-family" , "'Bebas Neue', cursive")
+              .style("font-size", "20px")
+              .style("fill", "white")
+              .text("TOP 5 GENRES FOR " + slideryear);
       
+      let genres = d3.map(genreObj[slideryear], d => d[0]) 
+      let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
+                                      .padding(0.05);
+      gbottomAxis.scale(genreScale)
+      bottomAxisG.transition().duration(200).call(gbottomAxis);
+
+      let genreNumber = d3.scaleLinear()
+            // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
+            .domain([0,623])
+            .range([genreHeight,30]);
+
+      genreChart.selectAll("rect.bar")
+          .data(genreObj[slideryear])
+          .join( enter => enter.append('rect')
+                              .attr('class','bar')
+                              .attr('fill','red')
+                              .attr("x", d => genreScale(d[0]))
+                              .attr("y", d => genreNumber(d[1]))
+                              .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+                              .attr("width", genreScale.bandwidth() )
+                              .attr("opacity", 0)
+                              .call( enter => enter.transition().duration(200).attr("opacity",1)), 
+                  update => update.call( update => update.transition().duration(200).attr("opacity",1)
+                                                  .attr('fill','red')
+                                                  .attr("x", d => genreScale(d[0]))
+                                                  .attr("y", d => genreNumber(d[1]))
+                                                  .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+                                                  .attr("width", genreScale.bandwidth() )),
+                  exit => exit.call( exit => exit.transition().duration(200).attr('opacity',0).remove() ) ); 
+
+      genreChart.selectAll('text.label')
+          .data(genreObj[slideryear])
+          .join("text").attr("class","label")
+          .text(d => d[1])
+          .style("font-size",15)
+          .style("fill","white")
+          .attr("x",d => genreScale(d[0]) + genreScale.bandwidth()/2)
+          .attr('y',d => genreNumber(d[1])-5);
     }
       //bar chart
       let annotations = svg2.append("g").attr("id", "annotations");
