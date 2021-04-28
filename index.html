@@ -107,9 +107,11 @@
   <h1>NETFLIX MOVIES AND TV SHOWS</h1>
   <h2>Info 3300 Project 2</h2>
   <div id="slider" style="margin:50px"></div>
+
   <svg id="choropleth" height="700" width="960" style="margin:20px"></svg>
   <h2> TOP 5 GENRES BY YEAR</h2>
   <svg id="bubble" height="400" width="940" style="margin:10px" ></svg>
+  <svg id="genreBar" height="400" width="900"></svg>
   <div id="barchartBody"><svg id="barchart" height="700" width="960" style="margin:20px"></svg></div>
   <svg id="piechart" height="450" width="450" style="margin:20px"></svg>
 
@@ -136,6 +138,17 @@
     const bubbleChart = bubble.append("g")
                     .attr("transform","translate("+bMargin.left+","+bMargin.top+")");
 
+    // Setting up the genre bar chart
+    const genreBar = d3.select("#genreBar");
+    const gWidth = genreBar.attr("width");
+    const gHeight = genreBar.attr("height");
+    const gMargin = { top: 30, right: 10, bottom: 20, left:10};
+    const genreWidth = gWidth - gMargin.left - gMargin.right;
+    const genreHeight = gHeight - gMargin.top - gMargin.bottom;
+    const genreChart = genreBar.append("g")
+                    .attr("transform","translate("+gMargin.left+","+gMargin.top+")");
+    let annotations = genreBar.append("g").attr("id","annotations");
+    
     //rating bar chart
     const svg2 = d3.select("#barchart");
     const width2 = svg2.attr("width");
@@ -369,6 +382,7 @@
           draw_map(current_year);
           d3.select('p#value-time').text(current_year);
           drawCircles(current_year);
+          drawBars(current_year);
         });
 
       var Time = slider
@@ -448,6 +462,16 @@
                 .style("font-size", "20px")
                 .style("fill", "white")
                 .text("TOP 5 GENRES FOR SELECTED YEAR");
+    
+     // create title for genre bar chart
+     genreBar.append("text")
+                .attr("x", gWidth / 2)
+                .attr("y", gMargin.top-5)
+                .attr("text-anchor", "middle")
+                .style("font-family" , "'Bebas Neue', cursive")
+                .style("font-size", "20px")
+                .style("fill", "white")
+                .text("TOP 5 GENRES FOR SELECTED YEAR");
      
      // Calculate the top 5 genres for each year
      let genreObj = {};
@@ -468,13 +492,6 @@
       // default circles are based on 2021
       drawCircles(2021);
       
-      // build scales
-      // let genreExtent = []
-      // genreExtent.push(genreObj[slideryear][genreObj[slideryear].length-1][1])
-      // genreExtent.push(genreObj[slideryear][0][1])
-      // console.log(genreExtent)
-
-      // const genreScale = d3.scaleLinear().domain(genreExtent).range([40,80]);
       // color of circles based on genre
       // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
 
@@ -489,10 +506,19 @@
         let node = bubbleChart.selectAll('circle.genre')
                                 .data(root.children)
                                 // .enter().append('g')
-                                .join("circle").attr("class","genre")
-                                .attr("r", d => d.r)
-                                .style('fill','red')
-                                .attr("label", d => d.data)
+                                .join( enter => enter.append("circle").data( root.children, d => d.data )
+                                                    .attr("class","genre")
+                                                    .attr("r", d => d.r)
+                                                    .style('fill','red')
+                                                    .attr("label", d => d.data)
+                                                    .attr("opacity", 0)
+                                                    .call( enter => enter.transition().duration(200).attr("opacity",1)), 
+                                        update => update.call( update => update.transition().duration(200).attr("opacity",1)
+                                                        .attr("class","genre")
+                                                        .attr("r", d => d.r)
+                                                        .style('fill','red')
+                                                        .attr("label", d => d.data) ),
+                                        exit => exit.call( exit => exit.transition().duration(300).attr('opacity',0).remove() ) )
                                 .attr('transform', d => `translate(${d.x}, ${d.y})`);
 
         let labels = bubbleChart.selectAll('text.label')
@@ -505,9 +531,57 @@
                                 .attr('transform', d => `translate(${d.x-20}, ${d.y})`);
       }
 
-
     // .data.name.substring(0, d.r / 3)
 
+    // genre bar chart
+    let bottomAxis = d3.axisBottom()
+    let bottomAxisG = annotations.append("g")
+                           .attr("class", "x axis")
+                           .attr("transform",`translate(${gMargin.left},${genreHeight+gMargin.top})`)
+    drawBars(2021);
+    // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
+    // console.log(maxGenre)
+    function drawBars (slideryear) {
+    let genres = d3.map(genreObj[slideryear], d => d[0]) 
+    let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
+                                     .padding(0.05);
+    bottomAxis.scale(genreScale)
+    bottomAxisG.transition().duration(200).call(bottomAxis);
+
+    let genreNumber = d3.scaleLinear()
+          // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
+          .domain([0,623])
+          .range([genreHeight,30]);
+
+    genreChart.selectAll("rect.bar")
+        .data(genreObj[slideryear])
+        .join( enter => enter.append('rect')
+                            .attr('class','bar')
+                            .attr('fill','red')
+                            .attr("x", d => genreScale(d[0]))
+                            .attr("y", d => genreNumber(d[1]))
+                            .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+                            .attr("width", genreScale.bandwidth() )
+                            .attr("opacity", 0)
+                            .call( enter => enter.transition().duration(200).attr("opacity",1)), 
+                update => update.call( update => update.transition().duration(200).attr("opacity",1)
+                                                .attr('fill','red')
+                                                .attr("x", d => genreScale(d[0]))
+                                                .attr("y", d => genreNumber(d[1]))
+                                                .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+                                                .attr("width", genreScale.bandwidth() )),
+                exit => exit.call( exit => exit.transition().duration(200).attr('opacity',0).remove() ) ); 
+
+    genreChart.selectAll('text.label')
+        .data(genreObj[slideryear])
+        .join("text").attr("class","label")
+        .text(d => d[1])
+        .style("font-size",15)
+        .style("fill","white")
+        .attr("x",d => genreScale(d[0]) + genreScale.bandwidth()/2)
+        .attr('y',d => genreNumber(d[1])-5);
+      
+    }
       //bar chart
       let annotations = svg2.append("g").attr("id", "annotations");
       var Rating_Age = ["Little Kids", "Kids", "Teen", "Adult"];
