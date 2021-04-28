@@ -1,17 +1,22 @@
-<html><head>
-    <title>INFO 3300/5100 - Project 2</title>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
-    <script src="https://d3js.org/topojson.v3.min.js"></script>
-    <script src="color_legend.js"></script>
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/d3-simple-slider"></script>
-    <style>
-    body{
+<html>
+
+<head>
+  <title>INFO 3300/5100 - Project 2</title>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://d3js.org/topojson.v3.min.js"></script>
+  <script src="color_legend.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/d3-simple-slider"></script>
+  <style>
+    body {
       background-color: black;
+      font-family: Arial, Helvetica, sans-serif;
+      position: relative;
     }
 
-    H1{
+    H1 {
       font-family: 'Bebas Neue', cursive;
       font-size: 60px;
       color: #E50914;
@@ -39,6 +44,22 @@
       stroke: darkgrey;
       stroke-width: 1px;
       fill: none;
+    }
+
+    .bar {
+      fill: rgb(228, 61, 61);
+    }
+
+    .gridlines line {
+      stroke: grey;
+    }
+
+    .gridlines .domain {
+      stroke: none;
+    }
+
+    .tooltip {
+      font: 12px Helvetica;
     }
 
     .legend_axis line{
@@ -84,10 +105,13 @@
 
 <body>
   <h1>NETFLIX MOVIES AND TV SHOWS</h1>
+  <h2>Info 3300 Project 2</h2>
   <div id="slider" style="margin:50px"></div>
-  <svg id="choropleth" height="700" width="940" style="margin:10px" ></svg>
-  <svg id="bubble" height="400" width="900"></svg>
-  <svg id="barchart" height="500" width="800" style="background:black"></svg>
+  <svg id="choropleth" height="700" width="960" style="margin:20px"></svg>
+  <h2> TOP 5 GENRES BY YEAR</h2>
+  <svg id="bubble" height="400" width="940" style="margin:10px" ></svg>
+  <div id="barchartBody"><svg id="barchart" height="700" width="960" style="margin:20px"></svg></div>
+  <svg id="piechart" height="450" width="450" style="margin:20px"></svg>
 
     <script>
 
@@ -96,11 +120,11 @@
     const slider = d3.select('div#slider');
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margin = { top: 20, right: 20, bottom: 40, left:20};
+    const margin = { top: 20, right: 20, bottom: 40, left: 20 };
     const mapWidth = width - margin.left - margin.right;
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
-                    .attr("transform","translate("+margin.left+","+margin.top+")");
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Setting up the bubble chart
     const bubble = d3.select("#bubble");
@@ -113,17 +137,20 @@
                     .attr("transform","translate("+bMargin.left+","+bMargin.top+")");
 
     //rating bar chart
-    const rating_svg = d3.select("#barchart");
-    const width2 = rating_svg.attr("width");
-    const height2 = rating_svg.attr("height");
-    const margin2 = { top: 50, right: 50, bottom: 20, left:60};
+    const svg2 = d3.select("#barchart");
+    const width2 = svg2.attr("width");
+    const height2 = svg2.attr("height");
+    const margin2 = { top: 100, right: 100, bottom: 60, left: 150 };
     const ratingWidth = width2 - margin2.left - margin2.right;
-    const ratingHeight = height2  - margin2.top - margin2.bottom;
-    const rating_barchart = rating_svg.append("g")
-                    .attr("transform","translate("+margin2.left+","+margin2.top+")");
+    const ratingHeight = height2 - margin2.top - margin2.bottom;
+    const rating_barchart = svg2.append("g")
+      .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
+    var margin3 = { top: 10, right: 10, bottom: 10, left: 10 },
+      width3 = 450 - margin3.left - margin3.right,
+      height3 = 450 - margin3.top - margin3.bottom;
 
-    const requestData = async function (){
+    const requestData = async function () {
 
       // world countries data
       var countries_topo = await d3.json("./countries-110m.json");
@@ -131,7 +158,7 @@
       // filter out Antarctica and Greenland
       var filtered_countries = countries_topo.objects.countries.geometries;
       filtered_countries = filtered_countries.filter(
-        d => d.properties.name !== "Antarctica" &&  d.properties.name !== "Greenland"
+        d => d.properties.name !== "Antarctica" && d.properties.name !== "Greenland"
       );
       countries_topo.objects.countries.geometries = filtered_countries;
 
@@ -147,9 +174,11 @@
       var graticule = d3.geoGraticule10();
       // map.append("path").attr("class","graticule").attr("d", path(graticule) )
 
-      // clean netflix data
-      const netflix_titles = await d3.csv("./netflix_titles.csv");
+      // clean netflix data 7787==>7265
+      let netflix_titles = await d3.csv("./netflix_titles.csv");
+      netflix_titles = netflix_titles.filter((d) => { return d['country'] != '' && d['rating'] != '' && d['date_added'] != '' });
       console.log(netflix_titles);
+
 
       // year added extent
       const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
@@ -168,6 +197,7 @@
         data[i]["countriesCount"] = {};
         data[i]["genresCount"] = {};
         data[i]["ratingsCount"] = {};
+        data[i]["ratingByCountry"] = {};
       }
 
       // initiate data for all years
@@ -179,17 +209,15 @@
       data['All_year']["countriesCount"] = {};
       data['All_year']["genresCount"] = {};
       data['All_year']["ratingsCount"] = {};
+      data['All_year']["ratingByCountry"] = {};
 
-      netflix_titles.forEach( (d, i) => {
-        if ((d.country === "")|| (d.date_added === "") || (d['listed_in'] === "")|| (d.rating === ""))  {
-          netflix_titles.splice(i, 1);
-        }
-        else {
-          year_added = d.date_added.split(', ')[1];
-          data[year_added]["num_titles"] += 1;
-          data['All_year']["num_titles"] += 1;
+      netflix_titles.forEach((d, i) => {
 
-          let release_countries = (d.country).split(', ');
+        year_added = d.date_added.split(', ')[1];
+        data[year_added]["num_titles"] += 1;
+        data['All_year']["num_titles"] += 1;
+
+        let release_countries = (d.country).split(', ');
           let dict = data[year_added]["countriesCount"];
           let dict_all = data['All_year']["countriesCount"];
           release_countries.forEach( (country, i) => {
@@ -229,7 +257,43 @@
             };
           });
 
+        let rating = d.rating;
+        let ratingDict = data[year_added]["ratingsCount"];
+        if (rating in ratingDict) {
+          ratingDict[rating] += 1;
+        }
+        else {
+          ratingDict[rating] = 1;
+          data[year_added]["num_ratings"] += 1;
+        };
+
+        //count rating for whole years
+        let Allyear_ratingDict = data['All_year']["ratingsCount"];
+        if (rating in Allyear_ratingDict) {
+          Allyear_ratingDict[rating] += 1;
+        }
+        else {
+          Allyear_ratingDict[rating] = 1;
+        };
+
+        let dict1 = data[year_added]["ratingByCountry"];
+        release_countries.forEach((country, i) => {
           let rating = d.rating;
+          if (country === "United States") country = "United States of America";
+          if (country === "Czech Republic") country = "Czechia";
+          if (country in dict1) {
+            if (rating in dict1[country]) {
+              dict1[country][rating] += 1;
+            }
+            else {
+              dict1[country][rating] = 1;
+            }
+          } else {
+            dict1[country] = {}
+            dict1[country][rating] = 1
+          }
+
+          // let rating = d.rating;/
           let ratingDict = data[year_added]["ratingsCount"];
           if (rating in ratingDict) {
             ratingDict[rating] += 1;
@@ -248,7 +312,7 @@
             Allyear_ratingDict[rating] = 1;
             data['All_year']['num_ratings']+=1;
           };
-        };
+        });
       });
 
       // console.log(data);
@@ -268,19 +332,24 @@
 
       // console.log("final data", data);
 
+      console.log("final data", data);
+      console.log(data)
       // draw countries
       map.selectAll("path.country")
-         .data(countries.features.filter(d => d.properties.name !== "Antarctica"
-                                     &&  d.properties.name !== "Greenland"))
-         .join("path")
-         .attr("class", "country")
-         .attr("note", (d, i) => d.properties.name )
-         .attr("d", path);
+        .data(countries.features.filter(d => d.properties.name !== "Antarctica"
+          && d.properties.name !== "Greenland"))
+        .join("path")
+        .attr("class", "country")
+        .attr("note", (d, i) => d.properties.name)
+        .attr("d", path);
 
       map.append("path").datum(countriesMesh)
-         .attr("class","outline")
-         .attr("d", path);
+        .attr("class", "outline")
+        .attr("d", path);
 
+      // 2020 data
+      data2020 = data["2020"];
+      console.log(data2020)
       // Added year slider
       var dataTime = d3.range(2008, 2022).map(function(d) {
         return new Date(d, 4, 26);
@@ -319,14 +388,14 @@
          .text("Use this slider to update all charts based on your year selection");
 
       // make colorscale based on title count in all years
-      var total_minMax = [0,0];
+      var total_minMax = [0, 0];
       for (i = year_added_extent[0]; i <= year_added_extent[1]; i++) {
-        let num_titles_values =  Object.values(data[i].countriesCount) ;
+        let num_titles_values = Object.values(data[i].countriesCount);
         let minMax = d3.extent(num_titles_values);
         if (minMax[1] > total_minMax[1]) total_minMax = [0, minMax[1]];
       };
-      const colorScale = d => d3.interpolateReds( d3.scaleSymlog()
-                                .domain([0, total_minMax[1]]).range([0,1])(d) );
+      const colorScale = d => d3.interpolateReds(d3.scaleSymlog()
+        .domain([0, total_minMax[1]]).range([0, 1])(d));
 
       // draw map
       // interaction function based on selected year
@@ -440,70 +509,291 @@
     // .data.name.substring(0, d.r / 3)
 
       //bar chart
-      //dict => array
-      let Allyear_ratingDict = data['All_year']['ratingsCount']
-      // console.log(Object.entries(Allyear_ratingDict))
-      let ratingArray = [];
-      for (const [rating, value] of Object.entries(Allyear_ratingDict)) {
-        ratingArray.push({
-          'rating': rating,
-          'value': value
-        })
+      let annotations = svg2.append("g").attr("id", "annotations");
+      var Rating_Age = ["Little Kids", "Kids", "Teen", "Adult"];
+      var stack = d3.stack()
+        .keys(Rating_Age)
+        .order(d3.stackOrderDescending)
+        .offset(d3.stackOffsetNone);
+
+      for (const [country, ratings] of Object.entries(data2020.ratingByCountry)) {
+        ratings['Country'] = country
       }
-      // console.log(ratingArray)
-      ratingArray = ratingArray.sort(function (a, b) {
-            return d3.ascending(a.value, b.value);
+
+      let stacked_data = Object.values(data2020.ratingByCountry)
+      let ratings = Object.keys(data2020.ratingsCount)
+
+      const RATING_MAP = {
+        "TV-MA": "Adult",
+        "R": "Adult",
+        "NC-17": "Adult",
+        "TV-14": "Teen",
+        "PG-13": "Teen",
+        "TV-PG": "Kids",
+        "TV-Y7": "Kids",
+        "PG": "Kids",
+        "TV-Y7-FV": "Kids",
+        "G": "Little Kids",
+        "TV-Y": "Little Kids",
+        "TV-G": "Little Kids"
+      }
+      let stacked_data2 = []
+      stacked_data.forEach((d) => {
+        let new_dict = {
+          "Adult": 0,
+          "Teen": 0,
+          "Kids": 0,
+          "Little Kids": 0
+        }
+
+        for (const [key, value] of Object.entries(d)) {
+          if (key === 'Country') {
+            new_dict[key] = value;
+          }
+          else if (key in RATING_MAP) {
+            new_dict[RATING_MAP[key]] += value;
+          }
+        }
+        stacked_data2.push(new_dict);
+      });
+
+      stacked_data2.sort(function (first, second) {
+        let first_total = Object.values(first).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
+        let second_total = Object.values(second).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
+        return d3.ascending(first_total, second_total);
+      })
+
+      if (stacked_data2.length >= 10) {
+        stacked_data2 = stacked_data2.slice(Math.max(stacked_data2.length - 10, 1))
+      }
+
+      console.log(stacked_data2)
+
+      maxNum = d3.max(Object.values(data2020['countriesCount']))
+      const xScale = d3.scaleLinear().domain([0, maxNum]).range([0, ratingWidth]);
+
+      var countryNames = stacked_data2.map(d => d.Country);
+      const yScale = d3.scaleBand().domain(countryNames).range([ratingHeight, 0])
+        .padding(0.2);
+
+      let leftAxis = d3.axisLeft(yScale);
+      let leftGridlines = d3.axisLeft(yScale)
+        .tickSize(-ratingWidth - 20)
+        .tickFormat("")
+
+      annotations.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")")
+        .attr("color", 'white')
+        .call(leftAxis);
+
+      let bottomAxis = d3.axisBottom(xScale).ticks(7);
+      let bottomGridlines = d3.axisBottom(xScale)
+        .tickSize(-ratingHeight - 20)
+        .tickFormat("");
+
+      annotations.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+        .attr("color", 'white')
+        .call(bottomAxis);
+
+      annotations.append("g")
+        .attr("class", "x gridlines")
+        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+        .attr("color", 'white')
+        .call(bottomGridlines);
+
+      let series = stack(stacked_data2);
+      const color1 = d3.scaleOrdinal().domain(Object.keys(data2020.ratingsCount)).range(d3.schemeTableau10);
+      const color = d3.scaleOrdinal().domain(Rating_Age).range(d3.schemeReds[4]);
+      let rects = rating_barchart.selectAll("g").data(series).enter()
+        .append("g")
+        .attr("fill", d => color(d.key));
+
+
+
+      var tooltip = d3.select("#barchartBody").append("div")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "10px")
+        .style("position", "absolute")
+        .style("display", "none");
+
+      var mouseover = function (d) {
+        d3.select(this)
+          .style("stroke", "white")
+        tooltip.style("left", d.pageX + 10 + "px")
+          .style("top", d.pageY - 25 + "px")
+          .style("display", "inline-block")
+          .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
+      }
+
+      var mousemove = function (d) {
+        tooltip
+          .style("left", (d3.select(this)[0] + 90) + "px")
+          .style("top", (d3.select(this)[1]) + "px")
+      }
+
+      var mouseleave = function (d) {
+        tooltip.style("display", "none");
+        d3.select(this)
+          .style("stroke", "none")
+      }
+
+
+      rects.selectAll("rect")
+        .data(d => d)
+        .join("rect")
+        .attr("x", d => xScale(d[0]))
+        .attr("y", (d, i) => yScale(d.data.Country))
+        .attr("width", d => {
+          let width;
+          if (d[1] === undefined || xScale(d[1]) === undefined) {
+            width = 0;
+          } else if (d[0] === undefined || xScale(d[0]) === undefined) {
+            width = xScale(d[1]);
+          } else {
+            width = xScale(d[1]) - xScale(d[0]);
+          }
+          return width;
         })
+        .attr("height", yScale.bandwidth())
+        .attr("label", d => d[1] - d[0])
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave);
 
-      var y = d3.scaleBand()
-          .domain(ratingArray.map(function(d) { return d.rating; }))
-          .range([ratingHeight, 0])
-          .padding(0.1);
 
-      var x = d3.scaleLinear()
-          .domain([0, d3.max(ratingArray, function(d){ return d.value; })])
-          .range([0, ratingWidth]);
-
-      var bars = rating_barchart.selectAll(".bar")
-        .data(ratingArray)
-        .enter()
-        .append("g");
-
-      bars.append("rect").attr("class", "bar")
-        .attr("width", function(d) {return x(d.value); } )
-        .attr("y", function(d) { return y(d.rating); })
-        .attr("height", y.bandwidth());
-
-      let leftAxis = d3.axisLeft(y).tickSize(0);
-      rating_barchart.append("g")
-                .attr("class", "y axis")
-                .attr("color", 'white')
-                .call(leftAxis);
-
-      bars.append("text")
-        .attr("class", "value")
-        .text(function(d) {return d.value;})
-        .attr("x", function(d){ return x(d.value) + 15;})
-        .attr("y", function(d){return y(d.rating) + y.bandwidth() * (0.5 + 0.1);})
-        .style("font-family" , "Arial")
-        .style("font-size", "13px")
+      /// add title
+      svg2.append("text")
+        .attr("x", width2 / 2)
+        .attr("y", margin2.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-family", "Arial")
+        .style("font-size", "20px")
         .style("fill", "white")
-        .attr("text-anchor", "middle");
+        .text("MOVIE AND TV SHOWS RATINGS BY COUNTRY");
 
-       // add title
-       rating_svg.append("text")
-                .attr("x", width2 / 2)
-                .attr("y", margin2.top / 2 )
-                .attr("text-anchor", "middle")
-                .style("font-family" , "Arial")
-                .style("font-size", "20px")
-                .style("fill", "white")
-                .text("MOVIE AND TV SHOWS BY RATING");
+      // Add X axis label:
+      svg2.append("text")
+        .attr("text-anchor", "end")
+        .attr("x", width2 - 100)
+        .attr("y", height2 - 10)
+        .style("fill", "white")
+        .text("Titles");
 
+      // Y axis label:
+      svg2.append("text")
+        .attr("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
+        .attr("y", margin2.left - 15)
+        .attr("x", -margin2.top + 40)
+        .style("fill", "white")
+        .text("Country")
+
+      //add legend
+      var size = 20
+      var Age_legend = svg2.append('g')
+        .attr('class', 'Age_legend')
+        .attr('transform', 'translate(' + 350 + ',' + (height2 - 400) + ')')
+        .style("margin-bottom", "5px");
+
+      Age_legend.selectAll('rect')
+        .data(Rating_Age)
+        .enter()
+        .append('rect')
+        .attr('x', 510)
+        .attr('y', function (d, i) {
+          return i * (size + 5)
+        })
+        .attr('width', size)
+        .attr('height', size)
+        .attr('fill', function (d, i) {
+          return color(i);
+        });
+
+      // Add one dot in the legend for each name.
+      Age_legend.selectAll("mylabels")
+        .data(Rating_Age)
+        .enter()
+        .append("text")
+        .attr("x", 510 + size * 1.2)
+        .attr("y", function (d, i) { return i * (size + 5) + (size / 2) })
+        .style("fill", function (d) { return color(d) })
+        .text(function (d) { return d })
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+
+      //pie chart
+      var pie_svg = d3.select("#piechart").append("svg")
+        .append("g")
+        .attr("transform", "translate(" + width3 / 2 + "," + height3 / 2 + ")");
+
+      var pie = d3.pie()
+        .value(function (d) { return d.value; })
+
+      let pieData = [];
+      for (const obj of Object.entries(data2020.ratingsCount)) {
+        let data = {
+          "key": obj[0],
+          "value": obj[1],
+        };
+        pieData.push(data);
+      }
+      var data_ready = pie(pieData);
+      var radius = Math.min(width3, height3) / 4;
+
+      // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+      var arcGenerator = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius)
+
+      const labelOffset = radius * 1.4;
+      const arcLabel = d3.arc()
+        .innerRadius(labelOffset)
+        .outerRadius(labelOffset);
+
+      pie_svg
+        .selectAll('whatever')
+        .data(data_ready)
+        .enter()
+        .append('path')
+        .attr('d', arcGenerator)
+        .attr('fill', function (d) { return color1(d.data.key) })
+        .attr("stroke", "white")
+        .style("stroke-width", "2px")
+        .style("opacity", 1)
+
+      const labels = pie_svg.selectAll('text')
+        .data(data_ready)
+        .enter()
+        .append('text')
+        .style('text-anchor', 'middle')
+        .style('alignment-baseline', 'middle')
+        .style('font-size', '15px')
+        .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
+
+      labels.append('tspan')
+        .attr('y', '-0.6em')
+        .attr('x', 0)
+        .style('font-weight', 'bold')
+        .style("fill", "white")
+        .text(d => `${d.data.key}`);
+
+      labels.append('tspan')
+        .attr('y', '0.6em')
+        .attr('x', 0)
+        .style("fill", "white")
+        .text(d => `${d.data.value} (${Math.round(d.data.value / data2020.num_titles * 100)}%)`);
 
     }
     requestData();
-    </script>
+  </script>
 
 </body>
 
