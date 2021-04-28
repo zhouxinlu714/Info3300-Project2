@@ -329,7 +329,7 @@
 
       // 2020 data
       data2020 = data["2020"];
-      console.log(data2020)
+      // console.log(current_data)
       // Added year slider
       var dataTime = d3.range(2008, 2022).map(function(d) {
         return new Date(d, 4, 26);
@@ -491,8 +491,6 @@
         stacked_data2 = stacked_data2.slice(Math.max(stacked_data2.length - 10, 1))
       }
 
-      console.log(stacked_data2)
-
       maxNum = d3.max(Object.values(data2020['countriesCount']))
       const xScale = d3.scaleLinear().domain([0, maxNum]).range([0, ratingWidth]);
 
@@ -529,13 +527,10 @@
         .call(bottomGridlines);
 
       let series = stack(stacked_data2);
-      const color1 = d3.scaleOrdinal().domain(Object.keys(data2020.ratingsCount)).range(d3.schemeTableau10);
       const color = d3.scaleOrdinal().domain(Rating_Age).range(d3.schemeReds[4]);
       let rects = rating_barchart.selectAll("g").data(series).enter()
         .append("g")
         .attr("fill", d => color(d.key));
-
-
 
       var tooltip = d3.select("#barchartBody").append("div")
         .append("div")
@@ -569,29 +564,17 @@
           .style("stroke", "none")
       }
 
-
       rects.selectAll("rect")
         .data(d => d)
         .join("rect")
         .attr("x", d => xScale(d[0]))
         .attr("y", (d, i) => yScale(d.data.Country))
-        .attr("width", d => {
-          let width;
-          if (d[1] === undefined || xScale(d[1]) === undefined) {
-            width = 0;
-          } else if (d[0] === undefined || xScale(d[0]) === undefined) {
-            width = xScale(d[1]);
-          } else {
-            width = xScale(d[1]) - xScale(d[0]);
-          }
-          return width;
-        })
+        .attr("width",d => xScale(d[1]) - xScale(d[0]))
         .attr("height", yScale.bandwidth())
         .attr("label", d => d[1] - d[0])
         .on("mouseover", mouseover)
         .on("mousemove", mousemove)
         .on("mouseleave", mouseleave);
-
 
       /// add title
       svg2.append("text")
@@ -654,6 +637,7 @@
         .style("alignment-baseline", "middle")
 
       //pie chart
+      const color1 = d3.scaleOrdinal().domain(Object.keys(data2020.ratingsCount)).range(d3.schemeTableau10);
       var pie_svg = d3.select("#piechart").append("svg")
         .append("g")
         .attr("transform", "translate(" + width3 / 2 + "," + height3 / 2 + ")");
@@ -672,7 +656,6 @@
       var data_ready = pie(pieData);
       var radius = Math.min(width3, height3) / 4;
 
-      // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
       var arcGenerator = d3.arc()
         .innerRadius(0)
         .outerRadius(radius)
