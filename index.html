@@ -23,7 +23,7 @@
       text-align: center;
     }
 
-    H2{
+    H2 {
       font-family: 'Bebas Neue', cursive;
       font-size: 30px;
       color: white;
@@ -62,15 +62,15 @@
       font: 12px Helvetica;
     }
 
-    .legend_axis line{
+    .legend_axis line {
       stroke: white;
     }
 
-    .legend_axis path{
+    .legend_axis path {
       stroke: white;
     }
 
-    .legend_axis text{
+    .legend_axis text {
       fill: white;
     }
 
@@ -84,7 +84,6 @@
       fill: rgb(255, 71, 71);
     }
 
-    .axis text,
     .slider text {
       font-size: 15px;
     }
@@ -93,12 +92,19 @@
       fill: grey;
     }
 
+    .gAxis text {
+      fill: white;
+      font-size: 12px;
+    }
+
     .slider text {
       fill: rgb(255, 71, 71);
     }
 
-    .bar { fill: rgb(228, 61, 61); }
-    </style>
+    .bar {
+      fill: rgb(228, 61, 61);
+    }
+  </style>
 
 </head>
 
@@ -107,12 +113,14 @@
   <h2>Info 3300 Project 2</h2>
   <div id="slider" style="margin:50px"></div>
   <svg id="choropleth" height="700" width="960" style="margin:20px"></svg>
-  <h2> TOP 5 GENRES BY YEAR</h2>
-  <svg id="bubble" height="400" width="940" style="margin:10px" ></svg>
+  <svg id="bubble" height="400" width="400" style="margin:10px"></svg>
+  <svg id="genreBar" height="400" width="700"></svg>
   <div id="barchartBody"><svg id="barchart" height="700" width="960" style="margin:20px"></svg></div>
   <svg id="piechart" height="450" width="450" style="margin:20px"></svg>
 
-    <script>
+  <script>
+
+    // Setting up the map
     const svg = d3.select("#choropleth");
     const slider = d3.select('div#slider');
     const width = svg.attr("width");
@@ -127,13 +135,24 @@
     const bubble = d3.select("#bubble");
     const bWidth = bubble.attr("width");
     const bHeight = bubble.attr("height");
-    const bMargin = { top: 20, right: 20, bottom: 20, left:20};
+    const bMargin = { top: 20, right: 10, bottom: 10, left: 10 };
     const chartWidth = bWidth - bMargin.left - bMargin.right;
     const chartHeight = bHeight - bMargin.top - bMargin.bottom;
     const bubbleChart = bubble.append("g")
-                    .attr("transform","translate("+bMargin.left+","+bMargin.top+")");
+      .attr("transform", "translate(" + bMargin.left + "," + bMargin.top + ")");
 
-    //rating bar chart
+    // Setting up the genre bar chart
+    const genreBar = d3.select("#genreBar");
+    const gWidth = genreBar.attr("width");
+    const gHeight = genreBar.attr("height");
+    const gMargin = { top: 30, right: 10, bottom: 20, left: 10 };
+    const genreWidth = gWidth - gMargin.left - gMargin.right;
+    const genreHeight = gHeight - gMargin.top - gMargin.bottom;
+    const genreChart = genreBar.append("g")
+      .attr("transform", "translate(" + gMargin.left + "," + gMargin.top + ")");
+    const gAnnotations = genreBar.append("g").attr("id", "annotations");
+
+    // Setting up the rating bar chart
     const svg2 = d3.select("#barchart");
     const width2 = svg2.attr("width");
     const height2 = svg2.attr("height");
@@ -163,7 +182,7 @@
       var countries = topojson.feature(countries_topo, countries_topo.objects.countries);
       var countriesMesh = topojson.mesh(countries_topo, countries_topo.objects.countries);
       var landMesh = topojson.mesh(countries_topo, countries_topo.objects.land);
-      console.log("countries", countries);
+      // console.log("countries", countries);
 
 
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
@@ -179,7 +198,7 @@
 
       // year added extent
       const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
-      console.log("added year extent", year_added_extent)
+      // console.log("added year extent", year_added_extent)
 
 
       // create a dictionary for each valid year called data, in the form of
@@ -215,44 +234,44 @@
         data['All_year']["num_titles"] += 1;
 
         let release_countries = (d.country).split(', ');
-          let dict = data[year_added]["countriesCount"];
-          let dict_all = data['All_year']["countriesCount"];
-          release_countries.forEach( (country, i) => {
-            if (country === "United States") country = "United States of America";
-            if (country === "Czech Republic") country = "Czechia";
-            if (country in dict){
-              dict[country] += 1;
-            } else{
-              dict[country] = 1;
-              data[year_added]["num_countries"] += 1;
-            };
-            if (country in dict_all){
-              dict_all[country] += 1;
-            } else{
-              dict_all[country] = 1;
-              data['All_year']["num_countries"] += 1;
-            };
-          });
+        let dict = data[year_added]["countriesCount"];
+        let dict_all = data['All_year']["countriesCount"];
+        release_countries.forEach((country, i) => {
+          if (country === "United States") country = "United States of America";
+          if (country === "Czech Republic") country = "Czechia";
+          if (country in dict) {
+            dict[country] += 1;
+          } else {
+            dict[country] = 1;
+            data[year_added]["num_countries"] += 1;
+          };
+          if (country in dict_all) {
+            dict_all[country] += 1;
+          } else {
+            dict_all[country] = 1;
+            data['All_year']["num_countries"] += 1;
+          };
+        });
 
-          let genres = d['listed_in'].split(", ");
-          let genreDict = data[year_added]["genresCount"];
-          let genreDict_all = data["All_year"]["genresCount"];
-          genres.forEach( (genre,i) => {
-            if (genre in genreDict) {
-              genreDict[genre] += 1;
-            }
-            else {
-              genreDict[genre] = 1;
-              data[year_added]["num_genres"] += 1;
-            };
-            if (genre in genreDict_all) {
-              genreDict_all[genre] += 1;
-            }
-            else {
-              genreDict_all[genre] = 1;
-              data['All_year']["num_genres"] += 1;
-            };
-          });
+        let genres = d['listed_in'].split(", ");
+        let genreDict = data[year_added]["genresCount"];
+        let genreDict_all = data["All_year"]["genresCount"];
+        genres.forEach((genre, i) => {
+          if (genre in genreDict) {
+            genreDict[genre] += 1;
+          }
+          else {
+            genreDict[genre] = 1;
+            data[year_added]["num_genres"] += 1;
+          };
+          if (genre in genreDict_all) {
+            genreDict_all[genre] += 1;
+          }
+          else {
+            genreDict_all[genre] = 1;
+            data['All_year']["num_genres"] += 1;
+          };
+        });
 
         let rating = d.rating;
         let ratingDict = data[year_added]["ratingsCount"];
@@ -307,13 +326,27 @@
           }
           else {
             Allyear_ratingDict[rating] = 1;
-            data['All_year']['num_ratings']+=1;
+            data['All_year']['num_ratings'] += 1;
           };
         });
       });
 
+      // console.log(data);
+
+      for (const year_added in data) {
+        for (const genresCount in year_added) {
+          var topFive = Object.keys(data[year_added]["genresCount"]).map(function (key) {
+            return [key, data[year_added]["genresCount"][key]];
+          });
+
+          topFive.sort(function (first, second) {
+            return second[1] - first[1];
+          });
+        }
+      };
+
       console.log("final data", data);
-      console.log(data)
+
       // draw countries
       map.selectAll("path.country")
         .data(countries.features.filter(d => d.properties.name !== "Antarctica"
@@ -328,10 +361,10 @@
         .attr("d", path);
 
       // 2020 data
-      data2020 = data["2020"];
+      data2020 = data["2015"];
       // console.log(current_data)
       // Added year slider
-      var dataTime = d3.range(2008, 2022).map(function(d) {
+      var dataTime = d3.range(2008, 2022).map(function (d) {
         return new Date(d, 4, 26);
       });
 
@@ -348,6 +381,9 @@
           let current_year = d3.timeFormat('%Y')(val);
           draw_map(current_year);
           d3.select('p#value-time').text(current_year);
+          drawCircles(current_year);
+          drawBars(current_year);
+          drawStack(current_year);
         });
 
       var Time = slider
@@ -361,10 +397,10 @@
       d3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
 
       slider.select('svg').append("text")
-         .attr("x", 10)
-         .attr("y", 10)
-         .attr("class", "slider_label")
-         .text("Year added to Netflix:");
+        .attr("x", 10)
+        .attr("y", 10)
+        .attr("class", "slider_label")
+        .text("Use this slider to update all charts based on your year selection");
 
       // make colorscale based on title count in all years
       var total_minMax = [0, 0];
@@ -378,18 +414,18 @@
 
       // draw map
       // interaction function based on selected year
-      function draw_map(current_year){
+      function draw_map(current_year) {
         let current_data = data[current_year];
         let countries_count = current_data.countriesCount;
         map.selectAll(".country")
-           .style("fill", d => colorScale(titles_count(d.properties.name, countries_count)) );
+          .style("fill", d => colorScale(titles_count(d.properties.name, countries_count)));
       };
 
       // default map is based on netflix data in 2021
       draw_map("2021");
 
-      function titles_count (ctry, countries_count) {
-        if (ctry in countries_count){
+      function titles_count(ctry, countries_count) {
+        if (ctry in countries_count) {
           count = countries_count[ctry];
         } else {
           count = 0;
@@ -397,185 +433,180 @@
         return count;
       };
 
-     // draw color legend
-     var legend_x = d3.scaleSymlog()
-                     .domain([0, total_minMax[1]])
-                     .range([margin.left+mapWidth*0.05, margin.left+mapWidth*0.9]);
+      // draw color legend
+      var legend_x = d3.scaleSymlog()
+        .domain([0, total_minMax[1]])
+        .range([margin.left + mapWidth * 0.05, margin.left + mapWidth * 0.9]);
 
-     map.append("g")
-           .attr("transform", `translate(0,${height-margin.bottom})`)
-           .attr("class", "legend_axis")
-           .call(rampHorizontal(legend_x, colorScale))
-           .call(d3.axisBottom(legend_x))
-         .selectAll("text")
-           .attr("dy", ".35em")
-           .attr("transform", "rotate(50)")
-           .style("text-anchor", "start");
+      map.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .attr("class", "legend_axis")
+        .call(rampHorizontal(legend_x, colorScale))
+        .call(d3.axisBottom(legend_x))
+        .selectAll("text")
+        .attr("dy", ".35em")
+        .attr("transform", "rotate(50)")
+        .style("text-anchor", "start");
 
-     map.append("text")
-        .attr("x", margin.left+mapWidth*0.04)
-        .attr("y", height-margin.bottom-30)
+      map.append("text")
+        .attr("x", margin.left + mapWidth * 0.04)
+        .attr("y", height - margin.bottom - 30)
         .attr("class", "legend_label")
         .text("Title count (per country):");
 
-     // Calculate the top 5 genres for each year
-     for (const year_added in data) {
-        for (const genresCount in year_added) {
-            var topFive = Object.keys(data[year_added]["genresCount"]).map(function(key) {
-                return [key, data[year_added]["genresCount"][key]];
-            });
-            
-            topFive.sort(function(first, second) {
-                return second[1] - first[1];
-            });
-        }
-        console.log(year_added, topFive.slice(0, 5));
-     };
+      // Calculate the top 5 genres for each year
+      let genreObj = {};
+      for (let year_added in data) {
+        for (let genresCount in year_added) {
+          var topFive = Object.keys(data[year_added]["genresCount"]).map(function (key) {
+            return [key, data[year_added]["genresCount"][key]];
+          });
 
-      //bar chart
-      let annotations = svg2.append("g").attr("id", "annotations");
+          topFive.sort(function (first, second) {
+            return second[1] - first[1];
+          });
+        }
+        genreObj[year_added] = topFive.slice(0, 5);
+      };
+      console.log(genreObj)
+
+      // default circles are based on 2021
+      drawCircles(2021);
+
+      // color of circles based on genre
+      // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
+
+      // draw circles
+      function drawCircles(slideryear) {
+
+        // create title for bubble chart
+        bubble.append("text")
+          .attr("x", bWidth / 2)
+          .attr("y", bMargin.top - 5)
+          .attr("text-anchor", "middle")
+          .style("font-family", "'Bebas Neue', cursive")
+          .style("font-size", "20px")
+          .style("fill", "white")
+          .text("TOP 5 GENRES FOR " + slideryear);
+
+        let bubblePack = d => d3.pack()
+          .size([chartWidth, chartHeight])
+          .padding(2)(d3.hierarchy({ children: genreObj[slideryear] }).sum(d => d[1]))
+
+        let root = bubblePack(genreObj[slideryear]);
+
+        let node = bubbleChart.selectAll('circle.genre')
+          .data(root.children)
+          .join(enter => enter.append("circle").data(root.children, d => d.data)
+            .attr("class", "genre")
+            .attr("r", d => d.r)
+            .style('fill', 'red')
+            .attr("label", d => d.data)
+            .attr("opacity", 0)
+            .call(enter => enter.transition().duration(200).attr("opacity", 1)),
+            update => update.call(update => update.transition().duration(200).attr("opacity", 1)
+              .attr("class", "genre")
+              .attr("r", d => d.r)
+              .style('fill', 'red')
+              .attr("label", d => d.data)),
+            exit => exit.call(exit => exit.transition().duration(300).attr('opacity', 0).remove()))
+          .attr('transform', d => `translate(${d.x}, ${d.y})`);
+
+        let labels = bubbleChart.selectAll('text.label')
+          .data(root.children)
+          .join("text").attr("class", "label")
+          .text(d => d.data)
+          // .text(d => d.data[0].substring(0,8))
+          .style("font-size", 15)
+          .style("fill", "white")
+          .attr('transform', d => `translate(${d.x - 20}, ${d.y})`);
+      }
+
+      // .data.name.substring(0, d.r / 3)
+
+      // genre bar chart
+      let gbottomAxis = d3.axisBottom()
+      let bottomAxisG = gAnnotations.append("g")
+        .attr("class", "gAxis")
+        .attr("transform", `translate(${gMargin.left},${genreHeight + gMargin.top})`)
+      drawBars(2021);
+      // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
+      // console.log(maxGenre)
+      function drawBars(slideryear) {
+
+        // create title for genre bar chart
+        genreBar.append("text")
+          .attr("x", gWidth / 2)
+          .attr("y", gMargin.top - 5)
+          .attr("text-anchor", "middle")
+          .style("font-family", "'Bebas Neue', cursive")
+          .style("font-size", "20px")
+          .style("fill", "white")
+          .text("TOP 5 GENRES FOR " + slideryear);
+
+        let genres = d3.map(genreObj[slideryear], d => d[0])
+        let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
+          .padding(0.05);
+        gbottomAxis.scale(genreScale)
+        bottomAxisG.transition().duration(200).call(gbottomAxis);
+
+        let genreNumber = d3.scaleLinear()
+          // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
+          .domain([0, 623])
+          .range([genreHeight, 30]);
+
+        genreChart.selectAll("rect.bar")
+          .data(genreObj[slideryear])
+          .join(enter => enter.append('rect')
+            .attr('class', 'bar')
+            .attr('fill', 'red')
+            .attr("x", d => genreScale(d[0]))
+            .attr("y", d => genreNumber(d[1]))
+            .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+            .attr("width", genreScale.bandwidth())
+            .attr("opacity", 0)
+            .call(enter => enter.transition().duration(200).attr("opacity", 1)),
+            update => update.call(update => update.transition().duration(200).attr("opacity", 1)
+              .attr('fill', 'red')
+              .attr("x", d => genreScale(d[0]))
+              .attr("y", d => genreNumber(d[1]))
+              .attr("height", d => genreNumber(0) - genreNumber(d[1]))
+              .attr("width", genreScale.bandwidth())),
+            exit => exit.call(exit => exit.transition().duration(200).attr('opacity', 0).remove()));
+
+        genreChart.selectAll('text.label')
+          .data(genreObj[slideryear])
+          .join("text").attr("class", "label")
+          .text(d => d[1])
+          .style("font-size", 15)
+          .style("fill", "white")
+          .attr("x", d => genreScale(d[0]) + genreScale.bandwidth() / 2)
+          .attr('y', d => genreNumber(d[1]) - 5);
+      }
+
+      //stack bar chart
       var Rating_Age = ["Little Kids", "Kids", "Teen", "Adult"];
       var stack = d3.stack()
         .keys(Rating_Age)
         .order(d3.stackOrderDescending)
         .offset(d3.stackOffsetNone);
 
-      for (const [country, ratings] of Object.entries(data2020.ratingByCountry)) {
-        ratings['Country'] = country
-      }
+      var annotations = svg2.append("g").attr("id", "annotations");
+      var yBarAxis = annotations.append("g")
+          .attr("class", "y axis")
+          .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")")
+          .attr("color", 'white');
+      
+     var xBarAxis = annotations.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+          .attr("color", 'white');
 
-      let stacked_data = Object.values(data2020.ratingByCountry)
-      let ratings = Object.keys(data2020.ratingsCount)
-
-      const RATING_MAP = {
-        "TV-MA": "Adult",
-        "R": "Adult",
-        "NC-17": "Adult",
-        "TV-14": "Teen",
-        "PG-13": "Teen",
-        "TV-PG": "Kids",
-        "TV-Y7": "Kids",
-        "PG": "Kids",
-        "TV-Y7-FV": "Kids",
-        "G": "Little Kids",
-        "TV-Y": "Little Kids",
-        "TV-G": "Little Kids"
-      }
-      let stacked_data2 = []
-      stacked_data.forEach((d) => {
-        let new_dict = {
-          "Adult": 0,
-          "Teen": 0,
-          "Kids": 0,
-          "Little Kids": 0
-        }
-
-        for (const [key, value] of Object.entries(d)) {
-          if (key === 'Country') {
-            new_dict[key] = value;
-          }
-          else if (key in RATING_MAP) {
-            new_dict[RATING_MAP[key]] += value;
-          }
-        }
-        stacked_data2.push(new_dict);
-      });
-
-      stacked_data2.sort(function (first, second) {
-        let first_total = Object.values(first).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
-        let second_total = Object.values(second).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
-        return d3.ascending(first_total, second_total);
-      })
-
-      if (stacked_data2.length >= 10) {
-        stacked_data2 = stacked_data2.slice(Math.max(stacked_data2.length - 10, 1))
-      }
-
-      maxNum = d3.max(Object.values(data2020['countriesCount']))
-      const xScale = d3.scaleLinear().domain([0, maxNum]).range([0, ratingWidth]);
-
-      var countryNames = stacked_data2.map(d => d.Country);
-      const yScale = d3.scaleBand().domain(countryNames).range([ratingHeight, 0])
-        .padding(0.2);
-
-      let leftAxis = d3.axisLeft(yScale);
-      let leftGridlines = d3.axisLeft(yScale)
-        .tickSize(-ratingWidth - 20)
-        .tickFormat("")
-
-      annotations.append("g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")")
-        .attr("color", 'white')
-        .call(leftAxis);
-
-      let bottomAxis = d3.axisBottom(xScale).ticks(7);
-      let bottomGridlines = d3.axisBottom(xScale)
-        .tickSize(-ratingHeight - 20)
-        .tickFormat("");
-
-      annotations.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
-        .attr("color", 'white')
-        .call(bottomAxis);
-
-      annotations.append("g")
-        .attr("class", "x gridlines")
-        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
-        .attr("color", 'white')
-        .call(bottomGridlines);
-
-      let series = stack(stacked_data2);
-      const color = d3.scaleOrdinal().domain(Rating_Age).range(d3.schemeReds[4]);
-      let rects = rating_barchart.selectAll("g").data(series).enter()
-        .append("g")
-        .attr("fill", d => color(d.key));
-
-      var tooltip = d3.select("#barchartBody").append("div")
-        .append("div")
-        .attr("class", "tooltip")
-        .style("background-color", "white")
-        .style("border", "solid")
-        .style("border-width", "1px")
-        .style("border-radius", "5px")
-        .style("padding", "10px")
-        .style("position", "absolute")
-        .style("display", "none");
-
-      var mouseover = function (d) {
-        d3.select(this)
-          .style("stroke", "white")
-        tooltip.style("left", d.pageX + 10 + "px")
-          .style("top", d.pageY - 25 + "px")
-          .style("display", "inline-block")
-          .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
-      }
-
-      var mousemove = function (d) {
-        tooltip
-          .style("left", (d3.select(this)[0] + 90) + "px")
-          .style("top", (d3.select(this)[1]) + "px")
-      }
-
-      var mouseleave = function (d) {
-        tooltip.style("display", "none");
-        d3.select(this)
-          .style("stroke", "none")
-      }
-
-      rects.selectAll("rect")
-        .data(d => d)
-        .join("rect")
-        .attr("x", d => xScale(d[0]))
-        .attr("y", (d, i) => yScale(d.data.Country))
-        .attr("width",d => xScale(d[1]) - xScale(d[0]))
-        .attr("height", yScale.bandwidth())
-        .attr("label", d => d[1] - d[0])
-        .on("mouseover", mouseover)
-        .on("mousemove", mousemove)
-        .on("mouseleave", mouseleave);
-
+      var xBarGrid = annotations.append("g")
+          .attr("class", "x gridlines")
+          .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+          .attr("color", 'white');
+      
       /// add title
       svg2.append("text")
         .attr("x", width2 / 2)
@@ -603,7 +634,9 @@
         .style("fill", "white")
         .text("Country")
 
-      //add legend
+      const color = d3.scaleOrdinal().domain(Rating_Age).range(d3.schemeReds[4]);
+
+      // Add Legend
       var size = 20
       var Age_legend = svg2.append('g')
         .attr('class', 'Age_legend')
@@ -634,7 +667,144 @@
         .style("fill", function (d) { return color(d) })
         .text(function (d) { return d })
         .attr("text-anchor", "left")
-        .style("alignment-baseline", "middle")
+        .style("alignment-baseline", "middle"); 
+
+      drawStack('2021');
+      // let select_year = data[2012];
+      function drawStack(current_year) {
+        let select_year = data[current_year];
+        // console.log(select_year)
+
+        for (const [country, ratings] of Object.entries(select_year.ratingByCountry)) {
+          ratings['Country'] = country
+        }
+
+        let stacked_data = Object.values(select_year.ratingByCountry)
+        let ratings = Object.keys(select_year.ratingsCount)
+
+        const RATING_MAP = {
+          "TV-MA": "Adult",
+          "R": "Adult",
+          "NC-17": "Adult",
+          "TV-14": "Teen",
+          "PG-13": "Teen",
+          "TV-PG": "Kids",
+          "TV-Y7": "Kids",
+          "PG": "Kids",
+          "TV-Y7-FV": "Kids",
+          "G": "Little Kids",
+          "TV-Y": "Little Kids",
+          "TV-G": "Little Kids"
+        }
+        let stacked_data2 = []
+        stacked_data.forEach((d) => {
+          let new_dict = {
+            "Adult": 0,
+            "Teen": 0,
+            "Kids": 0,
+            "Little Kids": 0
+          }
+
+          for (const [key, value] of Object.entries(d)) {
+            if (key === 'Country') {
+              new_dict[key] = value;
+            }
+            else if (key in RATING_MAP) {
+              new_dict[RATING_MAP[key]] += value;
+            }
+          }
+          stacked_data2.push(new_dict);
+        });
+
+        stacked_data2.sort(function (first, second) {
+          let first_total = Object.values(first).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
+          let second_total = Object.values(second).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
+          return d3.ascending(first_total, second_total);
+        })
+
+        if (stacked_data2.length >= 10) {
+          stacked_data2 = stacked_data2.slice(Math.max(stacked_data2.length - 10, 1))
+        }
+
+        maxNum = d3.max(Object.values(select_year['countriesCount']))
+        const xScale = d3.scaleLinear().domain([0, maxNum]).range([0, ratingWidth]);
+
+        var countryNames = stacked_data2.map(d => d.Country);
+        const yScale = d3.scaleBand().domain(countryNames).range([ratingHeight, 0])
+          .padding(0.2);
+
+        // Reset the axis
+        let leftAxis = d3.axisLeft(yScale);
+        let bottomAxis = d3.axisBottom(xScale).ticks(7);
+        let bottomGridlines = d3.axisBottom(xScale)
+          .tickSize(-ratingHeight - 20)
+          .tickFormat("");
+
+        yBarAxis.call(leftAxis);
+        xBarAxis.call(bottomAxis);
+        xBarGrid.call(bottomGridlines);
+
+        var series = stack(stacked_data2);
+        console.log(stacked_data2);
+
+        rating_barchart.selectAll("g").remove();
+        let rects = rating_barchart.selectAll("g").data(series)
+          .enter()
+          .append("g")
+          .attr("fill", d => color(d.key));
+
+        // rects.exit().remove();
+        // rects.enter()
+        //   .append("g")
+        //   .attr("fill", d => color(d.key));
+
+        // rects = rating_barchart.selectAll("g").data(series);
+
+        // Tooltip
+        var tooltip = d3.select("#barchartBody").append("div")
+          .append("div")
+          .attr("class", "tooltip")
+          .style("background-color", "white")
+          .style("border", "solid")
+          .style("border-width", "1px")
+          .style("border-radius", "5px")
+          .style("padding", "10px")
+          .style("position", "absolute")
+          .style("display", "none");
+
+        var mouseover = function (d) {
+          d3.select(this)
+            .style("stroke", "white")
+          tooltip.style("left", d.pageX + 10 + "px")
+            .style("top", d.pageY - 25 + "px")
+            .style("display", "inline-block")
+            .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
+        }
+
+        var mousemove = function (d) {
+          tooltip
+            .style("left", (d3.select(this)[0] + 90) + "px")
+            .style("top", (d3.select(this)[1]) + "px")
+        }
+
+        var mouseleave = function (d) {
+          tooltip.style("display", "none");
+          d3.select(this)
+            .style("stroke", "none")
+        }
+
+        rects.selectAll("rect")
+          .data(d => d)
+          .join("rect")
+          .attr("x", d => xScale(d[0]))
+          .attr("y", (d, i) => yScale(d.data.Country))
+          .attr("width", d => xScale(d[1]) - xScale(d[0]))
+          .attr("height", yScale.bandwidth())
+          .attr("label", d => d[1] - d[0])
+          .on("mouseover", mouseover)
+          .on("mousemove", mousemove)
+          .on("mouseleave", mouseleave);
+      }
 
       //pie chart
       const color1 = d3.scaleOrdinal().domain(Object.keys(data2020.ratingsCount)).range(d3.schemeTableau10);
@@ -699,6 +869,7 @@
         .text(d => `${d.data.value} (${Math.round(d.data.value / data2020.num_titles * 100)}%)`);
 
     }
+
     requestData();
   </script>
 
