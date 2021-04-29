@@ -30,6 +30,14 @@
       text-align: center;
     }
 
+    #description {
+      font-size: 15px;
+      width: 70%;
+      margin: auto;
+      color: white;
+      text-align: left;
+    }
+
     .country {
       fill: rgb(227, 236, 240)
     }
@@ -124,9 +132,13 @@
   <div id="slider" style="text-align:center;"></div>
   <div id="container" style="text-align:center;">
   <svg id="choropleth" height="500" width="960" style="margin:20px"></svg>
+  <div id="description"> Starting in 2016, Netflix began to tailor their content library to its increasingly global audiences. 
+    By 2017, it was operating in over 190 countries, and today, more than half its audience comes from non-U.S. countries.
+    These changes in audience demographics can be seen in the volume of international content added year on year.
+    Can you find any other genres trends over the years?</div>
   <h2 id="genreTitle"></h2>
-  <svg id="bubble" height="400" width="400" style="margin:10px" ></svg>
-  <svg id="genreBar" height="400" width="700"></svg>
+  <svg id="bubble" height="350" width="400" style="margin:10px" ></svg>
+  <svg id="genreBar" height="350" width="650"></svg>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
   <svg id="piechart" height="450" width="450" style="margin:20px"></svg>
   </div>
@@ -157,7 +169,7 @@
     const genreBar = d3.select("#genreBar");
     const gWidth = genreBar.attr("width");
     const gHeight = genreBar.attr("height");
-    const gMargin = { top: 30, right: 10, bottom: 20, left: 10 };
+    const gMargin = { top: 30, right: 10, bottom: 30, left: 10 };
     const genreWidth = gWidth - gMargin.left - gMargin.right;
     const genreHeight = gHeight - gMargin.top - gMargin.bottom;
     const genreChart = genreBar.append("g")
@@ -412,7 +424,8 @@
         .attr("x", 10)
         .attr("y", 10)
         .attr("class", "slider_label")
-        .text("Use this slider to update all charts based on your year selection");
+        .text("Use this slider to update all charts based on your year selection")
+        .style("font-size",15);
 
       // make colorscale based on title count in all years
       var total_minMax = [0, 0];
