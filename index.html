@@ -13,7 +13,7 @@
     body {
       background-color: black;
       font-family: Arial, Helvetica, sans-serif;
-      position: relative;
+      /* position: relative; */
     }
 
     H1 {
@@ -28,6 +28,14 @@
       font-size: 30px;
       color: white;
       text-align: center;
+    }
+
+    #description {
+      font-size: 15px;
+      width: 70%;
+      margin: auto;
+      color: white;
+      text-align: left;
     }
 
     .country {
@@ -86,6 +94,7 @@
 
     .slider text {
       font-size: 15px;
+      fill: rgb(255, 71, 71);
     }
 
     .axis text {
@@ -104,6 +113,15 @@
     .bar {
       fill: rgb(228, 61, 61);
     }
+    
+
+    #slider {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 50px;
+      background-color: black;
+      padding-top:10px;
+    }
   </style>
 
 </head>
@@ -111,15 +129,21 @@
 <body>
   <h1>NETFLIX MOVIES AND TV SHOWS</h1>
   <h2>Info 3300 Project 2</h2>
-  <div id="slider" style="margin:50px"></div> 
-  <svg id="choropleth" height="700" width="960" style="margin:20px"></svg>
-  <svg id="bubble" height="400" width="400" style="margin:10px"></svg>
-  <svg id="genreBar" height="400" width="700"></svg>
-  <div id="barchartBody"><svg id="barchart" height="700" width="960" style="margin:20px"></svg></div>
+  <div id="slider" style="text-align:center;"></div>
+  <div id="container" style="text-align:center;">
+  <svg id="choropleth" height="500" width="960" style="margin:20px"></svg>
+  <div id="description"> Starting in 2016, Netflix began to tailor their content library to its increasingly global audiences. 
+    By 2017, it was operating in over 190 countries, and today, more than half its audience comes from non-U.S. countries.
+    These changes in audience demographics can be seen in the volume of international content added year on year.
+    Can you find any other genres trends over the years?</div>
+  <h2 id="genreTitle"></h2>
+  <svg id="bubble" height="350" width="400" style="margin:10px" ></svg>
+  <svg id="genreBar" height="350" width="650"></svg>
+  <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
   <div id="piechartBody"><svg id="piechart" height="450" width="450" style="margin:20px"></svg></div>
+  </div>
 
-  <script>
-
+    <script>
     // Setting up the map
     const svg = d3.select("#choropleth");
     const slider = d3.select('div#slider');
@@ -145,7 +169,7 @@
     const genreBar = d3.select("#genreBar");
     const gWidth = genreBar.attr("width");
     const gHeight = genreBar.attr("height");
-    const gMargin = { top: 30, right: 10, bottom: 20, left: 10 };
+    const gMargin = { top: 30, right: 10, bottom: 30, left: 10 };
     const genreWidth = gWidth - gMargin.left - gMargin.right;
     const genreHeight = gHeight - gMargin.top - gMargin.bottom;
     const genreChart = genreBar.append("g")
@@ -401,7 +425,8 @@
         .attr("x", 10)
         .attr("y", 10)
         .attr("class", "slider_label")
-        .text("Use this slider to update all charts based on your year selection");
+        .text("Use this slider to update all charts based on your year selection")
+        .style("font-size",15);
 
       // make colorscale based on title count in all years
       var total_minMax = [0, 0];
@@ -481,14 +506,7 @@
       function drawCircles(slideryear) {
 
         // create title for bubble chart
-        bubble.append("text")
-          .attr("x", bWidth / 2)
-          .attr("y", bMargin.top - 5)
-          .attr("text-anchor", "middle")
-          .style("font-family", "'Bebas Neue', cursive")
-          .style("font-size", "20px")
-          .style("fill", "white")
-          .text("TOP 5 GENRES FOR " + slideryear);
+        document.getElementById('genreTitle').innerHTML = "Top 5 Genres For " + slideryear;
 
         let bubblePack = d => d3.pack()
           .size([chartWidth, chartHeight])
@@ -514,49 +532,39 @@
           .attr('transform', d => `translate(${d.x}, ${d.y})`);
 
         let labels = bubbleChart.selectAll('text.label')
-          .data(root.children)
-          .join("text").attr("class", "label")
-          .text(d => d.data)
-          // .text(d => d.data[0].substring(0,8))
-          .style("font-size", 15)
-          .style("fill", "white")
-          .attr('transform', d => `translate(${d.x - 20}, ${d.y})`);
+                                .data(root.children)
+                                .join("text").attr("class","label")
+                                .text(d => d.data[0].substring(0,8) + "...")
+                                // .text(d => d.data[0].substring(0,8))
+                                .style("font-size",15)
+                                .style("fill","white")
+                                .attr('transform', d => `translate(${d.x-d.r+10}, ${d.y})`);
       }
 
-      // .data.name.substring(0, d.r / 3)
+    // .data.name.substring(0, d.r / 3)
 
-      // genre bar chart
-      let gbottomAxis = d3.axisBottom()
-      let bottomAxisG = gAnnotations.append("g")
-        .attr("class", "gAxis")
-        .attr("transform", `translate(${gMargin.left},${genreHeight + gMargin.top})`)
-      drawBars(2021);
-      // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
-      // console.log(maxGenre)
-      function drawBars(slideryear) {
+    // genre bar chart
+    let gbottomAxis = d3.axisBottom()
+    let bottomAxisG = gAnnotations.append("g")
+                           .attr("class", "gAxis")
+                           .attr("transform",`translate(${gMargin.left},${genreHeight+gMargin.top})`)
+    drawBars(2021);
+    // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
+    // console.log(maxGenre)
+    function drawBars (slideryear) {
+      
+      let genres = d3.map(genreObj[slideryear], d => d[0]) 
+      let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
+                                      .padding(0.05);
+      gbottomAxis.scale(genreScale)
+      bottomAxisG.transition().duration(200).call(gbottomAxis);
 
-        // create title for genre bar chart
-        genreBar.append("text")
-          .attr("x", gWidth / 2)
-          .attr("y", gMargin.top - 5)
-          .attr("text-anchor", "middle")
-          .style("font-family", "'Bebas Neue', cursive")
-          .style("font-size", "20px")
-          .style("fill", "white")
-          .text("TOP 5 GENRES FOR " + slideryear);
+      let genreNumber = d3.scaleLinear()
+            // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
+            .domain([0,623])
+            .range([genreHeight,30]);
 
-        let genres = d3.map(genreObj[slideryear], d => d[0])
-        let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
-          .padding(0.05);
-        gbottomAxis.scale(genreScale)
-        bottomAxisG.transition().duration(200).call(gbottomAxis);
-
-        let genreNumber = d3.scaleLinear()
-          // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
-          .domain([0, 623])
-          .range([genreHeight, 30]);
-
-        genreChart.selectAll("rect.bar")
+      genreChart.selectAll("rect.bar")
           .data(genreObj[slideryear])
           .join(enter => enter.append('rect')
             .attr('class', 'bar')
@@ -745,8 +753,6 @@
         xBarGrid.call(bottomGridlines);
 
         var series = stack(stacked_data2);
-        console.log(stacked_data2);
-
         rating_barchart.selectAll("g").remove();
         let rects = rating_barchart.selectAll("g").data(series)
           .enter()
