@@ -31,11 +31,13 @@
     }
 
     #description {
-      font-size: 15px;
+      padding-top: 50px;
+      font-size: 20px;
       width: 70%;
       margin: auto;
       color: white;
       text-align: left;
+      font-weight: bold;
     }
 
     .country {
@@ -139,8 +141,10 @@
   <h2 id="genreTitle"></h2>
   <svg id="bubble" height="350" width="400" style="margin:10px" ></svg>
   <svg id="genreBar" height="350" width="650"></svg>
+  <div id="description">Now let’s explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country?</div>
+  <div id="piechartBody"><svg id="piechart" height="650" width="650" style="margin:20px"></svg></div>
+  <div id="description">We have seen countries producing most No. of shows, so why not have a look at these shows based on ratings. This graph is an enhanced version of the previous graph depicting the No. of shows produced by each country under each rating.</div>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
-  <div id="piechartBody"><svg id="piechart" height="450" width="450" style="margin:20px"></svg></div>
   </div>
 
     <script>
@@ -187,8 +191,8 @@
       .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
     var margin3 = { top: 10, right: 10, bottom: 10, left: 10 },
-      width3 = 450 - margin3.left - margin3.right,
-      height3 = 450 - margin3.top - margin3.bottom;
+      width3 = 650 - margin3.left - margin3.right,
+      height3 = 650 - margin3.top - margin3.bottom;
 
     const requestData = async function () {
 
@@ -827,7 +831,7 @@
           pieData.push(data);
         }
         var data_ready = pie(pieData);
-        var radius = Math.min(width3, height3) / 4;
+        var radius = Math.min(width3, height3) / 3.5;
 
         var arcGenerator = d3.arc()
           .innerRadius(0)
@@ -850,7 +854,6 @@
           .attr('fill', function (d) { return color1(d.data.key) })
           .attr("stroke", "white")
           .style("stroke-width", "1px")
-        // .style("opacity", 1)
 
         arcs.enter().append("line")
           .attr("stroke", "white")
@@ -877,8 +880,9 @@
           .append('text')
           .style('text-anchor', 'middle')
           .style('alignment-baseline', 'middle')
-          .style('font-size', '15px')
+          .style('font-size', '10px')
           .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
+          
 
         labels.append('tspan')
           .attr('y', '-0.6em')
@@ -891,7 +895,8 @@
           .attr('y', '0.6em')
           .attr('x', 0)
           .style("fill", "white")
-          .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`);
+          .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
+          
 
 
         // // Tooltip
