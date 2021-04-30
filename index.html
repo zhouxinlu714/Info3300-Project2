@@ -37,13 +37,14 @@
     }
 
     #description {
-      padding-top: 50px;
-      font-size: 20px;
+      /* padding-top: 50px; */
+      font-size: 18px;
+      font-family: serif;
       width: 70%;
       margin: auto;
       color: white;
       text-align: left;
-      font-weight: bold;
+      font-weight: 800;
     }
 
     .country {
@@ -139,7 +140,7 @@
   <h2>Netflix Titles Choropleth Map</h2>
   <div id="description">
     Netflix first introduced its streaming service in 2007 and has been growing into a massive success over years. How did Netflix achieve success?
-    The choropleth map below shows the geographical distribution of titles added to Netflix in each year. Select a year from 2008 to 2021 to show choropleth map for that year. Hover over a country to see the number of titles produced from that country.
+    The choropleth map below shows the geographical distribution of titles added to Netflix in each year. Select a year to show choropleth map for that year. Hover over a country to see the number of titles produced from that country.
     The statistics section at the top displays the total number of titles added in the selected year as well as production countries, genres and rating types statistics for that year.
     <br><br>
   </div>
@@ -461,7 +462,7 @@
         .attr("x", 10)
         .attr("y", 10)
         .attr("class", "slider_label")
-        .text("Use this slider to update all charts based on your year selection")
+        .text("Select a year to update all charts:")
         .style("font-size",15);
 
       // make colorscale based on title count in all years
@@ -954,7 +955,7 @@
 
         // arcs.selectAll("line").remove();
 
-        
+
         var labels = pie_svg.selectAll('text')
           .data(data_ready)
           .enter()
@@ -963,7 +964,7 @@
           .style('alignment-baseline', 'middle')
           .style('font-size', '10px')
           .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
-          
+
 
         labels.append('tspan')
           .attr('y', '-0.6em')
@@ -977,7 +978,7 @@
           .attr('x', 0)
           .style("fill", "white")
           .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
-          
+
 
 
         // // Tooltip
