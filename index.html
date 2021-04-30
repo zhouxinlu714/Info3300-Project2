@@ -37,11 +37,13 @@
     }
 
     #description {
-      font-size: 15px;
+      padding-top: 50px;
+      font-size: 20px;
       width: 70%;
       margin: auto;
       color: white;
       text-align: left;
+      font-weight: bold;
     }
 
     .country {
@@ -154,8 +156,10 @@
   <h2 id="genreTitle"></h2>
   <svg id="bubble" height="350" width="400" style="margin:10px" ></svg>
   <svg id="genreBar" height="350" width="650"></svg>
+  <div id="description">Now let’s explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country?</div>
+  <div id="piechartBody"><svg id="piechart" height="650" width="650" style="margin:20px"></svg></div>
+  <div id="description">We have seen countries producing most No. of shows, so why not have a look at these shows based on ratings. This graph is an enhanced version of the previous graph depicting the No. of shows produced by each country under each rating.</div>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
-  <svg id="piechart" height="450" width="450" style="margin:20px"></svg>
   </div>
 
     <script>
@@ -204,8 +208,8 @@
       .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
     var margin3 = { top: 10, right: 10, bottom: 10, left: 10 },
-      width3 = 450 - margin3.left - margin3.right,
-      height3 = 450 - margin3.top - margin3.bottom;
+      width3 = 650 - margin3.left - margin3.right,
+      height3 = 650 - margin3.top - margin3.bottom;
 
 
     const requestData = async function () {
@@ -440,6 +444,7 @@
           drawCircles(current_year);
           drawBars(current_year);
           drawStack(current_year);
+          drawPie(current_year);
         });
 
       var Time = slider
@@ -680,19 +685,19 @@
 
       var annotations = svg2.append("g").attr("id", "annotations");
       var yBarAxis = annotations.append("g")
-          .attr("class", "y axis")
-          .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")")
-          .attr("color", 'white');
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")")
+        .attr("color", 'white');
 
-     var xBarAxis = annotations.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
-          .attr("color", 'white');
+      var xBarAxis = annotations.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+        .attr("color", 'white');
 
       var xBarGrid = annotations.append("g")
-          .attr("class", "x gridlines")
-          .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
-          .attr("color", 'white');
+        .attr("class", "x gridlines")
+        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+        .attr("color", 'white');
 
       /// add title
       svg2.append("text")
@@ -760,7 +765,6 @@
       // let select_year = data[2012];
       function drawStack(current_year) {
         let select_year = data[current_year];
-        // console.log(select_year)
 
         for (const [country, ratings] of Object.entries(select_year.ratingByCountry)) {
           ratings['Country'] = country
@@ -832,20 +836,12 @@
         xBarGrid.call(bottomGridlines);
 
         var series = stack(stacked_data2);
-        // console.log(stacked_data2);
 
         rating_barchart.selectAll("g").remove();
         let rects = rating_barchart.selectAll("g").data(series)
           .enter()
           .append("g")
           .attr("fill", d => color(d.key));
-
-        // rects.exit().remove();
-        // rects.enter()
-        //   .append("g")
-        //   .attr("fill", d => color(d.key));
-
-        // rects = rating_barchart.selectAll("g").data(series);
 
         // Tooltip
         var tooltip = d3.select("#barchartBody").append("div")
@@ -894,67 +890,129 @@
           .on("mouseleave", mouseleave);
       }
 
+
       //pie chart
-      const color1 = d3.scaleOrdinal().domain(Object.keys(data2020.ratingsCount)).range(d3.schemeTableau10);
       var pie_svg = d3.select("#piechart").append("svg")
-        .append("g")
-        .attr("transform", "translate(" + width3 / 2 + "," + height3 / 2 + ")");
+          .append("g")
+          .attr("transform", "translate(" + width3 / 2 + "," + height3 / 2 + ")");
+      drawPie(2021)
+      function drawPie(current_year) {
+        let select_year = data[current_year];
+        const color1 = d3.scaleOrdinal().domain(Object.keys(select_year.ratingsCount)).range(d3.schemeTableau10);
 
-      var pie = d3.pie()
-        .value(function (d) { return d.value; })
+        var pie = d3.pie()
+          .value(function (d) { return d.value; })
 
-      let pieData = [];
-      for (const obj of Object.entries(data2020.ratingsCount)) {
-        let data = {
-          "key": obj[0],
-          "value": obj[1],
-        };
-        pieData.push(data);
+        let pieData = [];
+        for (const obj of Object.entries(select_year.ratingsCount)) {
+          let data = {
+            "key": obj[0],
+            "value": obj[1],
+          };
+          pieData.push(data);
+        }
+        var data_ready = pie(pieData);
+        var radius = Math.min(width3, height3) / 3.5;
+
+        var arcGenerator = d3.arc()
+          .innerRadius(0)
+          .outerRadius(radius)
+
+        const labelOffset = radius * 1.4;
+        const arcLabel = d3.arc()
+          .innerRadius(labelOffset)
+          .outerRadius(labelOffset);
+
+        pie_svg.selectAll("path").remove();
+        pie_svg.selectAll("line").remove();
+        pie_svg.selectAll('text').remove();
+
+        var arcs = pie_svg.selectAll("path").data(data_ready);
+
+        arcs.enter()
+          .append("path")
+          .attr('d', arcGenerator)
+          .attr('fill', function (d) { return color1(d.data.key) })
+          .attr("stroke", "white")
+          .style("stroke-width", "1px")
+
+        arcs.enter().append("line")
+          .attr("stroke", "white")
+          .attr("x1", function (d) {
+            return arcGenerator.centroid(d)[0] * 2;
+          })
+          .attr("y1", function (d) {
+            return arcGenerator.centroid(d)[1] * 2;
+          })
+          .attr("x2", function (d) {
+            return arcGenerator.centroid(d)[0] * 2.2;
+          })
+          .attr("y2", function (d) {
+            return arcGenerator.centroid(d)[1] * 2.2;
+          });
+
+
+        // arcs.selectAll("line").remove();
+
+        
+        var labels = pie_svg.selectAll('text')
+          .data(data_ready)
+          .enter()
+          .append('text')
+          .style('text-anchor', 'middle')
+          .style('alignment-baseline', 'middle')
+          .style('font-size', '10px')
+          .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
+          
+
+        labels.append('tspan')
+          .attr('y', '-0.6em')
+          .attr('x', 0)
+          .style('font-weight', 'bold')
+          .style("fill", "white")
+          .text(d => `${d.data.key}`);
+
+        labels.append('tspan')
+          .attr('y', '0.6em')
+          .attr('x', 0)
+          .style("fill", "white")
+          .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
+          
+
+
+        // // Tooltip
+        // var tooltip1 = d3.select("#piechartBody").append("div")
+        //   .attr("class", "tooltip1")
+        //   .style("background-color", "white")
+        //   .style("border", "solid")
+        //   .style("border-width", "1px")
+        //   .style("border-radius", "5px")
+        //   .style("padding", "10px")
+        //   .style("position", "absolute")
+        //   .style("display", "none");
+
+        // var mouseover = function (d) {
+        //   d3.select(this)
+        //     .style("stroke", "white")
+        //   tooltip1.style("left", d.pageX + 10 + "px")
+        //     .style("top", d.pageY - 25 + "px")
+        //     .style("display", "inline-block")
+        //     .style("opacity", 1)
+        //     .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
+        // }
+
+        // var mousemove = function (d) {
+        //   tooltip1
+        //     .style("left", (d3.select(this)[0] + 90) + "px")
+        //     .style("top", (d3.select(this)[1]) + "px")
+        // }
+
+        // var mouseleave = function (d) {
+        //   tooltip1.style("display", "none");
+        //   d3.select(this)
+        //     .style("stroke", "none")
+        // }
       }
-      var data_ready = pie(pieData);
-      var radius = Math.min(width3, height3) / 4;
-
-      var arcGenerator = d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius)
-
-      const labelOffset = radius * 1.4;
-      const arcLabel = d3.arc()
-        .innerRadius(labelOffset)
-        .outerRadius(labelOffset);
-
-      pie_svg
-        .selectAll('whatever')
-        .data(data_ready)
-        .enter()
-        .append('path')
-        .attr('d', arcGenerator)
-        .attr('fill', function (d) { return color1(d.data.key) })
-        .attr("stroke", "white")
-        .style("stroke-width", "2px")
-        .style("opacity", 1)
-
-      const labels = pie_svg.selectAll('text')
-        .data(data_ready)
-        .enter()
-        .append('text')
-        .style('text-anchor', 'middle')
-        .style('alignment-baseline', 'middle')
-        .style('font-size', '15px')
-        .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
-
-      labels.append('tspan')
-        .attr('y', '-0.6em')
-        .attr('x', 0)
-        .style('font-weight', 'bold')
-        .style("fill", "white")
-        .text(d => `${d.data.key}`);
-
-      labels.append('tspan')
-        .attr('y', '0.6em')
-        .attr('x', 0)
-        .style("fill", "white")
-        .text(d => `${d.data.value} (${Math.round(d.data.value / data2020.num_titles * 100)}%)`);
     }
 
     requestData();
