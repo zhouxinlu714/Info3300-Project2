@@ -18,7 +18,7 @@
 
     H1 {
       font-family: 'Bebas Neue', cursive;
-      font-size: 60px;
+      font-size: 70px;
       color: #E50914;
       text-align: center;
     }
@@ -136,7 +136,7 @@
 </head>
 
 <body>
-  <h1>NETFLIX MOVIES AND TV SHOWS</h1>
+  <h1>NETFLIX</h1>
   <h2>Netflix Titles Choropleth Map</h2>
   <div id="description">
     Netflix first introduced its streaming service in 2007 and has been growing into a massive success over years. How did Netflix achieve success?
@@ -157,9 +157,9 @@
   <h2 id="genreTitle"></h2>
   <svg id="bubble" height="350" width="400" style="margin:10px" ></svg>
   <svg id="genreBar" height="350" width="650"></svg>
-  <div id="description">Now let’s explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country?</div>
+  <div id="description">Now let’s explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country? </div>
   <div id="piechartBody"><svg id="piechart" height="650" width="650" style="margin:20px"></svg></div>
-  <div id="description">We have seen countries producing most No. of shows, so why not have a look at these shows based on ratings. This graph is an enhanced version of the previous graph depicting the No. of shows produced by each country under each rating.</div>
+  <div id="description">We have seen countries producing most numbers of shows, so why not have a look at these shows based on ratings. This graph is an enhanced version of the previous graph depicting the number of shows produced by each country under each rating.</div>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
   </div>
 
@@ -846,7 +846,6 @@
 
         // Tooltip
         var tooltip = d3.select("#barchartBody").append("div")
-          .append("div")
           .attr("class", "tooltip")
           .style("background-color", "white")
           .style("border", "solid")
@@ -856,7 +855,7 @@
           .style("position", "absolute")
           .style("display", "none");
 
-        var mouseover = function (d) {
+        let mouseover = function (d) {
           // console.log(d3.select(this.parentNode).datum());
           d3.select(this)
             .style("stroke", "white")
@@ -866,13 +865,13 @@
             .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
         }
 
-        var mousemove = function (d) {
+        let mousemove = function (d) {
           tooltip
             .style("left", (d3.select(this)[0] + 90) + "px")
             .style("top", (d3.select(this)[1]) + "px")
         }
 
-        var mouseleave = function (d) {
+        let mouseleave = function (d) {
           tooltip.style("display", "none");
           d3.select(this)
             .style("stroke", "none")
@@ -930,12 +929,56 @@
 
         var arcs = pie_svg.selectAll("path").data(data_ready);
 
+        // Tooltip
+        let tooltip1 = d3.select("#piechartBody").append("div")
+          .attr("class", "tooltip")
+          .style("background-color", "white")
+          .style("border", "solid")
+          .style("border-width", "1px")
+          .style("border-radius", "5px")
+          .style("padding", "10px")
+          .style("position", "absolute")
+          .style("display", "none");
+
+        let mouseover = function (d) {
+          arcs.selectAll("path")
+          .transition().duration(200)
+            .style("stroke", "white")
+            .style("opacity", .4)
+        d3.select(this)
+          .transition().duration(200)
+          .style("opacity", 0.5);
+          tooltip1.style("left", d.pageX + 10 + "px")
+            .style("top", d.pageY - 25 + "px")
+            .style("display", "inline-block")
+            .style("opacity", 1)
+            // .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
+            .html(d3.select(this).datum().data.key + ": " + d3.select(this).datum().data.value);
+        }
+        // d3.select(this).datum().properties.name
+
+        let mousemove = function (d) {
+          tooltip1
+            .style("left", (d3.select(this)[0] + 90) + "px")
+            .style("top", (d3.select(this)[1]) + "px")
+        }
+
+        let mouseleave = function (d) {
+          tooltip1.style("display", "none");
+          d3.select(this)
+           .transition().duration(200)
+           .style("opacity", 1)
+        }
+
         arcs.enter()
           .append("path")
           .attr('d', arcGenerator)
           .attr('fill', function (d) { return color1(d.data.key) })
-          .attr("stroke", "white")
-          .style("stroke-width", "1px")
+          // .attr("stroke", "white")
+          // .style("stroke-width", "5px")
+          .on("mouseover", mouseover)
+          .on("mousemove", mousemove)
+          .on("mouseleave", mouseleave);
 
         arcs.enter().append("line")
           .attr("stroke", "white")
@@ -946,10 +989,10 @@
             return arcGenerator.centroid(d)[1] * 2;
           })
           .attr("x2", function (d) {
-            return arcGenerator.centroid(d)[0] * 2.2;
+            return arcGenerator.centroid(d)[0] * 2.4;
           })
           .attr("y2", function (d) {
-            return arcGenerator.centroid(d)[1] * 2.2;
+            return arcGenerator.centroid(d)[1] * 2.4;
           });
 
 
@@ -977,22 +1020,24 @@
           .attr('y', '0.6em')
           .attr('x', 0)
           .style("fill", "white")
-          .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
+          // .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
+          .text(d => ` (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
 
 
 
         // // Tooltip
-        // var tooltip1 = d3.select("#piechartBody").append("div")
-        //   .attr("class", "tooltip1")
+        // let tooltip1 = d3.select("#piechartBody").append("div")
+        //   .attr("class", "tooltip")
         //   .style("background-color", "white")
         //   .style("border", "solid")
         //   .style("border-width", "1px")
         //   .style("border-radius", "5px")
         //   .style("padding", "10px")
         //   .style("position", "absolute")
-        //   .style("display", "none");
+        //   .html("test");
+        //   // .style("display", "none");
 
-        // var mouseover = function (d) {
+        // let mouseover = function (d) {
         //   d3.select(this)
         //     .style("stroke", "white")
         //   tooltip1.style("left", d.pageX + 10 + "px")
@@ -1002,13 +1047,13 @@
         //     .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
         // }
 
-        // var mousemove = function (d) {
+        // let mousemove = function (d) {
         //   tooltip1
         //     .style("left", (d3.select(this)[0] + 90) + "px")
         //     .style("top", (d3.select(this)[1]) + "px")
         // }
 
-        // var mouseleave = function (d) {
+        // let mouseleave = function (d) {
         //   tooltip1.style("display", "none");
         //   d3.select(this)
         //     .style("stroke", "none")
