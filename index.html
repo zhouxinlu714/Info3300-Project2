@@ -30,6 +30,12 @@
       text-align: center;
     }
 
+    .mapSummary {
+      dominant-baseline: hanging;
+      font: bold 18px Sans-serif;
+      fill: rgb(255, 71, 71);
+    }
+
     #description {
       padding-top: 50px;
       font-size: 20px;
@@ -115,7 +121,7 @@
     .bar {
       fill: rgb(228, 61, 61);
     }
-    
+
 
     #slider {
       position: -webkit-sticky;
@@ -130,11 +136,20 @@
 
 <body>
   <h1>NETFLIX MOVIES AND TV SHOWS</h1>
-  <h2>Info 3300 Project 2</h2>
+  <h2>Netflix Titles Choropleth Map</h2>
+  <div id="description">
+    Netflix first introduced its streaming service in 2007 and has been growing into a massive success over years. How did Netflix achieve success?
+    The choropleth map below shows the geographical distribution of titles added to Netflix in each year. Select a year from 2008 to 2021 to show choropleth map for that year. Hover over a country to see the number of titles produced from that country.
+    The statistics section at the top displays the total number of titles added in the selected year as well as production countries, genres and rating types statistics for that year.
+    <br><br>
+  </div>
   <div id="slider" style="text-align:center;"></div>
   <div id="container" style="text-align:center;">
-  <svg id="choropleth" height="500" width="960" style="margin:20px"></svg>
-  <div id="description"> Starting in 2016, Netflix began to tailor their content library to its increasingly global audiences. 
+  <div id = "choroplethBody">
+    <svg id="mapStats" height="40" width="960"></svg>
+    <svg id="choropleth" height="550" width="960" style="margin:20px"></svg>
+  </div>
+  <div id="description"> Starting in 2016, Netflix began to tailor their content library to its increasingly global audiences.
     By 2017, it was operating in over 190 countries, and today, more than half its audience comes from non-U.S. countries.
     These changes in audience demographics can be seen in the volume of international content added year on year.
     Can you find any other genres trends over the years?</div>
@@ -149,15 +164,17 @@
 
     <script>
     // Setting up the map
-    const svg = d3.select("#choropleth");
+    const svg = d3.select("svg#choropleth");
     const slider = d3.select('div#slider');
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margin = { top: 20, right: 20, bottom: 40, left: 20 };
+    const margin = { top: 10, right: 20, bottom: 60, left: 20 };
     const mapWidth = width - margin.left - margin.right;
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    const stats = d3.select("svg#mapStats")
+      .append("g").attr("transform", "translate(" + margin.left*2 + "," + 0 + ")");
 
     // Setting up the bubble chart
     const bubble = d3.select("#bubble");
@@ -194,6 +211,7 @@
       width3 = 650 - margin3.left - margin3.right,
       height3 = 650 - margin3.top - margin3.bottom;
 
+
     const requestData = async function () {
 
       // world countries data
@@ -209,13 +227,9 @@
       //  projection and path for world countries
       var countries = topojson.feature(countries_topo, countries_topo.objects.countries);
       var countriesMesh = topojson.mesh(countries_topo, countries_topo.objects.countries);
-      var landMesh = topojson.mesh(countries_topo, countries_topo.objects.land);
-      // console.log("countries", countries);
-
-
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
       var path = d3.geoPath().projection(projection);
-      var graticule = d3.geoGraticule10();
+      // var graticule = d3.geoGraticule10();
       // map.append("path").attr("class","graticule").attr("d", path(graticule) )
 
       // clean netflix data 7787==>7265
@@ -360,6 +374,7 @@
       });
 
       // console.log(data);
+      data2020 = data[2015]
 
       for (const year_added in data) {
         for (const genresCount in year_added) {
@@ -384,13 +399,30 @@
         .attr("note", (d, i) => d.properties.name)
         .attr("d", path);
 
+      // draw country outlines
       map.append("path").datum(countriesMesh)
         .attr("class", "outline")
         .attr("d", path);
 
-      // 2020 data
-      data2020 = data["2015"];
-      // console.log(current_data)
+      // map statistics
+      var titles_stats = stats.append("text")
+      .attr("class", "mapSummary")
+      .attr("x", 0)
+      .attr("y", 20);
+      var countries_stats = stats.append("text")
+      .attr("class", "mapSummary")
+      .attr("x", mapWidth*0.3)
+      .attr("y", 20);
+      var genres_stats = stats.append("text")
+      .attr("class", "mapSummary")
+      .attr("x", mapWidth*0.6)
+      .attr("y", 20);
+      var ratings_stats = stats.append("text")
+      .attr("class", "mapSummary")
+      .attr("x", mapWidth*0.76)
+      .attr("y", 20);
+
+
       // Added year slider
       var dataTime = d3.range(2008, 2022).map(function (d) {
         return new Date(d, 4, 26);
@@ -404,7 +436,7 @@
         .width(800)
         .tickFormat(d3.timeFormat('%Y'))
         .tickValues(dataTime)
-        .default(new Date(2021, 4, 26))
+        .default(new Date(2013, 4, 26))
         .on('onchange', val => {
           let current_year = d3.timeFormat('%Y')(val);
           draw_map(current_year);
@@ -418,7 +450,7 @@
       var Time = slider
         .append('svg')
         .attr('width', 900)
-        .attr('height', 100)
+        .attr('height', 80)
         .append('g')
         .attr('transform', 'translate(30,30)');
 
@@ -445,11 +477,58 @@
       // draw map
       // interaction function based on selected year
       function draw_map(current_year) {
+
         let current_data = data[current_year];
         let countries_count = current_data.countriesCount;
         map.selectAll(".country")
-          .style("fill", d => colorScale(titles_count(d.properties.name, countries_count)));
+          .attr("label", d => titles_count(d.properties.name, countries_count) )
+          .style("fill", d => colorScale(titles_count(d.properties.name, countries_count)))
+          .on("mouseover", mouseover_map)
+          .on("mousemove", mousemove_map)
+          .on("mouseleave", mouseleave_map);
+
+        titles_stats.text(current_data["num_titles"] + " movies & TV shows");
+        genres_stats.text(current_data["num_genres"] + " genres");
+        ratings_stats.text(current_data["num_ratings"] + " rating types");
+        countries_stats.text(current_data["num_countries"]+" production countries");
       };
+
+      // Map countries tooltip
+      var tooltip_map = d3.select("#choroplethBody").append("div")
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "10px")
+        .style("position", "absolute")
+        .style("display", "none");
+
+      var mouseover_map = function (d) {
+        map.selectAll(".country")
+          .transition().duration(200)
+          .style("opacity", .4);
+        d3.select(this)
+          .transition().duration(200)
+          .style("opacity", 1);
+        tooltip_map.style("left", d.pageX + 10 + "px")
+          .style("top", d.pageY - 25 + "px")
+          .style("display", "inline-block")
+          .html(d3.select(this).datum().properties.name + ": " + d3.select(this).attr("label"));
+      }
+
+      var mousemove_map = function (d) {
+        tooltip_map
+          .style("left", (d3.select(this)[0] + 90) + "px")
+          .style("top", (d3.select(this)[1]) + "px")
+      }
+
+      var mouseleave_map = function (d) {
+        tooltip_map.style("display", "none");
+        map.selectAll(".Country")
+           .transition().duration(200)
+           .style("opacity", 1)
+      }
 
       // default map is based on netflix data in 2021
       draw_map("2021");
@@ -469,7 +548,7 @@
         .range([margin.left + mapWidth * 0.05, margin.left + mapWidth * 0.9]);
 
       map.append("g")
-        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .attr("transform", `translate(0,${height - margin.bottom+30})`)
         .attr("class", "legend_axis")
         .call(rampHorizontal(legend_x, colorScale))
         .call(d3.axisBottom(legend_x))
@@ -480,9 +559,9 @@
 
       map.append("text")
         .attr("x", margin.left + mapWidth * 0.04)
-        .attr("y", height - margin.bottom - 30)
+        .attr("y", height - margin.bottom)
         .attr("class", "legend_label")
-        .text("Title count (per country):");
+        .text("Title count (per country per year):");
 
       // Calculate the top 5 genres for each year
       let genreObj = {};
@@ -501,7 +580,7 @@
       console.log(genreObj)
 
       // default circles are based on 2021
-      drawCircles(2021);
+      drawCircles(2013);
 
       // color of circles based on genre
       // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
@@ -556,8 +635,8 @@
     // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
     // console.log(maxGenre)
     function drawBars (slideryear) {
-      
-      let genres = d3.map(genreObj[slideryear], d => d[0]) 
+
+      let genres = d3.map(genreObj[slideryear], d => d[0])
       let genreScale = d3.scaleBand().domain(genres).range([0, genreWidth])
                                       .padding(0.05);
       gbottomAxis.scale(genreScale)
@@ -757,6 +836,7 @@
         xBarGrid.call(bottomGridlines);
 
         var series = stack(stacked_data2);
+
         rating_barchart.selectAll("g").remove();
         let rects = rating_barchart.selectAll("g").data(series)
           .enter()
@@ -776,6 +856,7 @@
           .style("display", "none");
 
         var mouseover = function (d) {
+          // console.log(d3.select(this.parentNode).datum());
           d3.select(this)
             .style("stroke", "white")
           tooltip.style("left", d.pageX + 10 + "px")
