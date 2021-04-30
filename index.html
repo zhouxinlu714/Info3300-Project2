@@ -127,7 +127,7 @@
     #slider {
       position: -webkit-sticky;
       position: sticky;
-      top: 50px;
+      top: 10px;
       background-color: black;
       padding-top:10px;
     }
@@ -155,9 +155,9 @@
     These changes in audience demographics can be seen in the volume of international content added year on year.
     Can you find any other genres trends over the years?</div>
   <h2 id="genreTitle"></h2>
-  <svg id="bubble" height="350" width="400" style="margin:10px" ></svg>
   <svg id="genreBar" height="350" width="650"></svg>
-  <div id="description">Now let’s explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country? </div>
+  <svg id="bubble" height="350" width="400" style="margin:10px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"></svg>
+  <div id="description">Now let's explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country? </div>
   <div id="piechartBody"><svg id="piechart" height="650" width="650" style="margin:20px"></svg></div>
   <div id="description">We have seen countries producing most numbers of shows, so why not have a look at these shows based on ratings. This graph is an enhanced version of the previous graph depicting the number of shows produced by each country under each rating.</div>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
@@ -177,16 +177,6 @@
     const stats = d3.select("svg#mapStats")
       .append("g").attr("transform", "translate(" + margin.left*2 + "," + 0 + ")");
 
-    // Setting up the bubble chart
-    const bubble = d3.select("#bubble");
-    const bWidth = bubble.attr("width");
-    const bHeight = bubble.attr("height");
-    const bMargin = { top: 20, right: 10, bottom: 10, left: 10 };
-    const chartWidth = bWidth - bMargin.left - bMargin.right;
-    const chartHeight = bHeight - bMargin.top - bMargin.bottom;
-    const bubbleChart = bubble.append("g")
-      .attr("transform", "translate(" + bMargin.left + "," + bMargin.top + ")");
-
     // Setting up the genre bar chart
     const genreBar = d3.select("#genreBar");
     const gWidth = genreBar.attr("width");
@@ -197,6 +187,16 @@
     const genreChart = genreBar.append("g")
       .attr("transform", "translate(" + gMargin.left + "," + gMargin.top + ")");
     const gAnnotations = genreBar.append("g").attr("id", "annotations");
+    
+    // Setting up the bubble chart
+    const bubble = d3.select("#bubble");
+    const bWidth = bubble.attr("width");
+    const bHeight = bubble.attr("height");
+    const bMargin = { top: 20, right: 10, bottom: 10, left: 10 };
+    const chartWidth = bWidth - bMargin.left - bMargin.right;
+    const chartHeight = bHeight - bMargin.top - bMargin.bottom;
+    const bubbleChart = bubble.append("g")
+      .attr("transform", "translate(" + bMargin.left + "," + bMargin.top + ")");
 
     // Setting up the rating bar chart
     const svg2 = d3.select("#barchart");
@@ -270,6 +270,7 @@
       data['All_year']["ratingsCount"] = {};
       data['All_year']["ratingByCountry"] = {};
 
+      // Loop through and fill in the data object
       netflix_titles.forEach((d, i) => {
 
         year_added = d.date_added.split(', ')[1];
@@ -326,15 +327,7 @@
           data[year_added]["num_ratings"] += 1;
         };
 
-        //count rating for whole years
-        let Allyear_ratingDict = data['All_year']["ratingsCount"];
-        if (rating in Allyear_ratingDict) {
-          Allyear_ratingDict[rating] += 1;
-        }
-        else {
-          Allyear_ratingDict[rating] = 1;
-        };
-
+        // Count ratings by country
         let dict1 = data[year_added]["ratingByCountry"];
         release_countries.forEach((country, i) => {
           let rating = d.rating;
@@ -352,8 +345,7 @@
             dict1[country][rating] = 1
           }
 
-          // let rating = d.rating;/
-          let ratingDict = data[year_added]["ratingsCount"];
+        let ratingDict = data[year_added]["ratingsCount"];
           if (rating in ratingDict) {
             ratingDict[rating] += 1;
           }
@@ -362,7 +354,7 @@
             data[year_added]["num_ratings"] += 1;
           };
 
-          //count rating for whole years
+          // Count rating for all years
           let Allyear_ratingDict = data['All_year']["ratingsCount"];
           if (rating in Allyear_ratingDict) {
             Allyear_ratingDict[rating] += 1;
@@ -374,8 +366,7 @@
         });
       });
 
-      // console.log(data);
-      data2020 = data[2015]
+      // Calculate the top 5 genres for each year
 
       for (const year_added in data) {
         for (const genresCount in year_added) {
@@ -391,7 +382,7 @@
 
       console.log("final data", data);
 
-      // draw countries
+      // Draw countries
       map.selectAll("path.country")
         .data(countries.features.filter(d => d.properties.name !== "Antarctica"
           && d.properties.name !== "Greenland"))
@@ -400,12 +391,12 @@
         .attr("note", (d, i) => d.properties.name)
         .attr("d", path);
 
-      // draw country outlines
+      // Draw country outlines
       map.append("path").datum(countriesMesh)
         .attr("class", "outline")
         .attr("d", path);
 
-      // map statistics
+      // Add general statistics to map
       var titles_stats = stats.append("text")
       .attr("class", "mapSummary")
       .attr("x", 0)
@@ -424,7 +415,7 @@
       .attr("y", 20);
 
 
-      // Added year slider
+      // Add year slider
       var dataTime = d3.range(2008, 2022).map(function (d) {
         return new Date(d, 4, 26);
       });
@@ -465,7 +456,7 @@
         .text("Select a year to update all charts:")
         .style("font-size",15);
 
-      // make colorscale based on title count in all years
+      // Make color scale based on title count in all years
       var total_minMax = [0, 0];
       for (i = year_added_extent[0]; i <= year_added_extent[1]; i++) {
         let num_titles_values = Object.values(data[i].countriesCount);
@@ -475,8 +466,8 @@
       const colorScale = d => d3.interpolateReds(d3.scaleSymlog()
         .domain([0, total_minMax[1]]).range([0, 1])(d));
 
-      // draw map
-      // interaction function based on selected year
+      // Draw map
+      // Interaction function based on selected year
       function draw_map(current_year) {
 
         let current_data = data[current_year];
@@ -531,8 +522,8 @@
            .style("opacity", 1)
       }
 
-      // default map is based on netflix data in 2021
-      draw_map("2021");
+      // Default map is based on netflix data in 2013
+      draw_map("2013");
 
       function titles_count(ctry, countries_count) {
         if (ctry in countries_count) {
@@ -543,7 +534,7 @@
         return count;
       };
 
-      // draw color legend
+      // Draw color legend
       var legend_x = d3.scaleSymlog()
         .domain([0, total_minMax[1]])
         .range([margin.left + mapWidth * 0.05, margin.left + mapWidth * 0.9]);
@@ -580,17 +571,26 @@
       };
       console.log(genreObj)
 
-      // default circles are based on 2021
+      // default circles are based on 2013
       drawCircles(2013);
-
-      // color of circles based on genre
-      // const typeScale = d3.scaleOrdinal().domain(["genre1","genre2"]).range(["#color","#color"]);
 
       // draw circles
       function drawCircles(slideryear) {
 
-        // create title for bubble chart
-        document.getElementById('genreTitle').innerHTML = "Top 5 Genres For " + slideryear;
+        // create title for charts
+        document.getElementById('genreTitle').innerHTML = "Top 5 Genres For Titles Added In " + slideryear;
+
+        // Color scale based on genre
+        // let genreObjAll = data[year_added]["genresCount"]
+    
+        // let genreArr = []
+        // for (const [key, value] of Object.entries(genreObjAll)) {
+        //   genreArr.push(key);
+        // };
+        // console.log(genreArr)
+        
+        // let gColorScale = d3.interpolateReds(d3.scaleSymlog().domain(genreArr).range([0, 1]));
+        // let gColorScale = d3.scaleOrdinal(d3.schemeCategory10)
 
         let bubblePack = d => d3.pack()
           .size([chartWidth, chartHeight])
@@ -604,6 +604,7 @@
             .attr("class", "genre")
             .attr("r", d => d.r)
             .style('fill', 'red')
+            // .style('fill', d => gColorScale(d.data[0]))
             .attr("label", d => d.data)
             .attr("opacity", 0)
             .call(enter => enter.transition().duration(200).attr("opacity", 1)),
@@ -611,18 +612,21 @@
               .attr("class", "genre")
               .attr("r", d => d.r)
               .style('fill', 'red')
+              // .style('fill', d => gColorScale(d.data[0]))
               .attr("label", d => d.data)),
             exit => exit.call(exit => exit.transition().duration(300).attr('opacity', 0).remove()))
           .attr('transform', d => `translate(${d.x}, ${d.y})`);
 
-        let labels = bubbleChart.selectAll('text.label')
+        let labels = bubbleChart.selectAll('foreignObject.label')
                                 .data(root.children)
-                                .join("text").attr("class","label")
-                                .text(d => d.data[0].substring(0,8) + "...")
-                                // .text(d => d.data[0].substring(0,8))
-                                .style("font-size",15)
-                                .style("fill","white")
-                                .attr('transform', d => `translate(${d.x-d.r+10}, ${d.y})`);
+                                .join("foreignObject").attr("class","label")
+                                .text(d => d.data[0])
+                                // .text(d => d.data[0].substring(0,15) + "...")
+                                .attr("width", d => d.r+30)
+                                .attr("height",50)
+                                .style("font-size",11)
+                                .style("color","white")
+                                .attr('transform', d => `translate(${d.x-d.r+10}, ${d.y-d.r/4})`);
       }
 
     // .data.name.substring(0, d.r / 3)
@@ -670,10 +674,10 @@
         genreChart.selectAll('text.label')
           .data(genreObj[slideryear])
           .join("text").attr("class", "label")
-          .text(d => d[1])
-          .style("font-size", 15)
+          .text(d => d[1] + " Titles")
+          .style("font-size", 12)
           .style("fill", "white")
-          .attr("x", d => genreScale(d[0]) + genreScale.bandwidth() / 2)
+          .attr("x", d => genreScale(d[0]))
           .attr('y', d => genreNumber(d[1]) - 5);
       }
 
