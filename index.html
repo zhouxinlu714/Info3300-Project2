@@ -25,7 +25,7 @@
 
     H2 {
       font-family: 'Bebas Neue', cursive;
-      font-size: 30px;
+      font-size: 40px;
       color: white;
       text-align: center;
     }
@@ -44,7 +44,7 @@
       margin: auto;
       color: white;
       text-align: left;
-      font-weight: 800;
+      font-weight: 500;
     }
 
     .country {
@@ -129,7 +129,6 @@
       position: sticky;
       top: 10px;
       background-color: black;
-      padding-top:10px;
     }
   </style>
 
@@ -137,11 +136,11 @@
 
 <body>
   <h1>NETFLIX</h1>
-  <h2>Netflix Titles Choropleth Map</h2>
   <div id="description">
-    Netflix first introduced its streaming service in 2007 and has been growing into a massive success over years. How did Netflix achieve success?
-    The choropleth map below shows the geographical distribution of titles added to Netflix in each year. Select a year to show choropleth map for that year. Hover over a country to see the number of titles produced from that country.
-    The statistics section at the top displays the total number of titles added in the selected year as well as production countries, genres and rating types statistics for that year.
+    <p>Since Netflix began ramping up its streaming service in 2013, it has grown into an increasingly successful global service. 
+      In the following visualizations, we'll explore how Netflix has tailored its content to its growth.</p>
+    <h2>Geographical origin of titles added to Netflix </h2>
+      <p>Let's explore where Netflix titles are being produced and how that changes over time. Use the year slider below to check out the data for each year. You can also hover over a country to see the number of titles produced in that country.</p>
     <br><br>
   </div>
   <div id="slider" style="text-align:center;"></div>
@@ -150,16 +149,17 @@
     <svg id="mapStats" height="40" width="960"></svg>
     <svg id="choropleth" height="550" width="960" style="margin:20px"></svg>
   </div>
-  <div id="description"> Starting in 2016, Netflix began to tailor their content library to its increasingly global audiences.
+  <div id="description">Netflix began to really tailor their content library to its global audience in 2016.
     By 2017, it was operating in over 190 countries, and today, more than half its audience comes from non-U.S. countries.
     These changes in audience demographics can be seen in the volume of international content added year on year.
     Can you find any other genres trends over the years?</div>
   <h2 id="genreTitle"></h2>
   <svg id="genreBar" height="350" width="650"></svg>
   <svg id="bubble" height="350" width="400" style="margin:10px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"></svg>
-  <div id="description">Now let's explore a bit more on this data and see the different ratings for the shows on Netflix. Netflix is available for viewers to enjoy in 110 countries, with international subscribers fueling most of its impressive rise over the last several years. Does Netflix uniformly target certain demographics? Or does this vary by country? </div>
+  <div id="description" style="margin-top:20px">Now let's dive into the changing maturity ratings for Netflix titles. Has Netflix uniformly targeted certain viewer demographics? Or does this vary across the years? </div>
+  <h2>Distribution of Maturity ratings in selected year</h2>
   <div id="piechartBody"><svg id="piechart" height="650" width="650" style="margin:20px"></svg></div>
-  <div id="description">We have seen countries producing most numbers of shows, so why not have a look at these shows based on ratings. This graph is an enhanced version of the previous graph depicting the number of shows produced by each country under each rating.</div>
+  <div id="description">The distribution of content maturity levels changes when we examine the data on a country-level. How might this be related to the streaming culture and preferences of different countries?</div>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
   </div>
 
@@ -621,15 +621,12 @@
                                 .data(root.children)
                                 .join("foreignObject").attr("class","label")
                                 .text(d => d.data[0])
-                                // .text(d => d.data[0].substring(0,15) + "...")
                                 .attr("width", d => d.r+30)
                                 .attr("height",50)
                                 .style("font-size",11)
                                 .style("color","white")
                                 .attr('transform', d => `translate(${d.x-d.r+10}, ${d.y-d.r/4})`);
       }
-
-    // .data.name.substring(0, d.r / 3)
 
     // genre bar chart
     let gbottomAxis = d3.axisBottom()
@@ -709,10 +706,10 @@
         .attr("x", width2 / 2)
         .attr("y", margin2.top / 2)
         .attr("text-anchor", "middle")
-        .style("font-family", "Arial")
-        .style("font-size", "20px")
+        .style("font-family", "'Bebas Neue', cursive")
+        .style("font-size", "40px")
         .style("fill", "white")
-        .text("MOVIE AND TV SHOWS RATINGS BY COUNTRY");
+        .text("MATURITY RATINGS BY COUNTRY");
 
       // Add X axis label:
       svg2.append("text")
