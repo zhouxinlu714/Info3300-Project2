@@ -137,7 +137,7 @@
 <body>
   <h1>NETFLIX</h1>
   <div id="description">
-    <p>Since Netflix began ramping up its streaming service in 2013, it has grown into an increasingly successful global service. 
+    <p>Since Netflix began ramping up its streaming service in 2013, it has grown into an increasingly successful global service.
       In the following visualizations, we'll explore how Netflix has tailored its content to its growth.</p>
     <h2>Geographical origin of titles added to Netflix </h2>
       <p>Let's explore where Netflix titles are being produced and how that changes over time. Use the year slider below to check out the data for each year. You can also hover over a country to see the number of titles produced in that country.</p>
@@ -187,7 +187,7 @@
     const genreChart = genreBar.append("g")
       .attr("transform", "translate(" + gMargin.left + "," + gMargin.top + ")");
     const gAnnotations = genreBar.append("g").attr("id", "annotations");
-    
+
     // Setting up the bubble chart
     const bubble = d3.select("#bubble");
     const bWidth = bubble.attr("width");
@@ -506,7 +506,7 @@
         tooltip_map.style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 25 + "px")
           .style("display", "inline-block")
-          .html(d3.select(this).datum().properties.name + ": " + d3.select(this).attr("label"));
+          .html(d3.select(this).datum().properties.name + ": " + d3.select(this).attr("label") + " titles");
       }
 
       var mousemove_map = function (d) {
@@ -582,13 +582,13 @@
 
         // Color scale based on genre
         // let genreObjAll = data[year_added]["genresCount"]
-    
+
         // let genreArr = []
         // for (const [key, value] of Object.entries(genreObjAll)) {
         //   genreArr.push(key);
         // };
         // console.log(genreArr)
-        
+
         // let gColorScale = d3.interpolateReds(d3.scaleSymlog().domain(genreArr).range([0, 1]));
         // let gColorScale = d3.scaleOrdinal(d3.schemeCategory10)
 
