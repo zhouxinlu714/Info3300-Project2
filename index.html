@@ -662,7 +662,7 @@
         .order(d3.stackOrderDescending)
         .offset(d3.stackOffsetNone);
 
-      var annotations = svg2.append("g").attr("id", "annotations");
+      var annotations = svg2.append("g").attr("id", "annotations").lower();
 
       var xBarGrid = annotations.append("g")
         .attr("class", "x gridlines")
@@ -813,6 +813,11 @@
           .enter()
           .append("g")
           .attr("fill", d => color(d.key));
+        
+        // let rects = rating_barchart.selectAll("g").data(series)
+        //   .join("g")
+        //   .attr("fill", d => color(d.key));
+
 
         // Tooltip
         var tooltip = d3.select("#barchartBody").append("div")
