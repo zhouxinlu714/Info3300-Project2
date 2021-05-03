@@ -12,7 +12,6 @@
     body {
       background-color: black;
       font-family: Arial, Helvetica, sans-serif;
-      /* position: relative; */
     }
 
     H1 {
@@ -36,7 +35,6 @@
     }
 
     #description {
-      /* padding-top: 50px; */
       font-size: 18px;
       font-family: serif;
       width: 70%;
@@ -137,11 +135,10 @@
 <body>
   <h1>NETFLIX</h1>
   <div id="description">
-    <p>Since Netflix began ramping up its streaming service in 2013, it has grown into an increasingly successful global service. 
+    <p>Since Netflix began ramping up its streaming service in 2013, it has grown into an increasingly successful global service.
       In the following visualizations, we'll explore how Netflix has tailored its content to its growth.</p>
-    <h2>Geographical origin of titles added to Netflix </h2>
-      <p>Let's explore where Netflix titles are being produced and how that changes over time. Use the year slider below to check out the data for each year. You can also hover over a country to see the number of titles produced in that country.</p>
-    <br><br>
+    <h2>Geographical origin of new titles added to Netflix </h2>
+      <p>Every year, Netflix adds new content to its platform. Let's explore where these added titles are produced and how that changes over time. Use the year slider below to filter the data for each year. Hovering over a country will show the number of titles produced in that country.</p>
   </div>
   <div id="slider" style="text-align:center;"></div>
   <div id="container" style="text-align:center;">
@@ -149,15 +146,15 @@
     <svg id="mapStats" height="40" width="960"></svg>
     <svg id="choropleth" height="550" width="960" style="margin:20px"></svg>
   </div>
-  <div id="description">Netflix began to really tailor their content library to its global audience in 2016.
+  <div id="description">Netflix began to tailor their content library to its global audience in 2016.
     By 2017, it was operating in over 190 countries, and today, more than half its audience comes from non-U.S. countries.
-    These changes in audience demographics can be seen in the volume of international content added year on year.
+    This global expansion is reflected in the genres of new titles added every year - international content is often ranked in the top 5 genres.
     Can you find any other genres trends over the years?</div>
   <h2 id="genreTitle"></h2>
-  <svg id="genreBar" height="350" width="650"></svg>
   <svg id="bubble" height="350" width="400" style="margin:10px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"></svg>
-  <div id="description" style="margin-top:20px">Now let's dive into the changing maturity ratings for Netflix titles. Has Netflix uniformly targeted certain viewer demographics? Or does this vary across the years? </div>
-  <h2>Distribution of Maturity ratings in selected year</h2>
+  <svg id="genreBar" height="350" width="650" style="border:1px solid white"></svg>
+  <div id="description" style="margin-top:30px">Now let's dive into the changing maturity ratings for Netflix titles. Has Netflix uniformly targeted certain viewer demographics? Or does this vary across the years? </div>
+  <h2>Distribution of Maturity ratings in new content</h2>
   <div id="piechartBody"><svg id="piechart" height="650" width="650" style="margin:20px"></svg></div>
   <div id="description">The distribution of content maturity levels changes when we examine the data on a country-level. How might this be related to the streaming culture and preferences of different countries?</div>
   <div id="barchartBody"><svg id="barchart" height="500" width="960" style="margin:20px"></svg></div>
@@ -187,7 +184,7 @@
     const genreChart = genreBar.append("g")
       .attr("transform", "translate(" + gMargin.left + "," + gMargin.top + ")");
     const gAnnotations = genreBar.append("g").attr("id", "annotations");
-    
+
     // Setting up the bubble chart
     const bubble = d3.select("#bubble");
     const bWidth = bubble.attr("width");
@@ -230,8 +227,6 @@
       var countriesMesh = topojson.mesh(countries_topo, countries_topo.objects.countries);
       var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], countries);
       var path = d3.geoPath().projection(projection);
-      // var graticule = d3.geoGraticule10();
-      // map.append("path").attr("class","graticule").attr("d", path(graticule) )
 
       // clean netflix data 7787==>7265
       let netflix_titles = await d3.csv("./netflix_titles.csv");
@@ -241,7 +236,6 @@
 
       // year added extent
       const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
-      // console.log("added year extent", year_added_extent)
 
 
       // create a dictionary for each valid year called data, in the form of
@@ -497,7 +491,7 @@
         tooltip_map.style("left", d.pageX + 10 + "px")
           .style("top", d.pageY - 25 + "px")
           .style("display", "inline-block")
-          .html(d3.select(this).datum().properties.name + ": " + d3.select(this).attr("label"));
+          .html(d3.select(this).datum().properties.name + ": " + d3.select(this).attr("label") + " titles");
       }
 
       var mousemove_map = function (d) {
@@ -562,30 +556,22 @@
       };
       console.log(genreObj)
 
-      // default circles are based on 2013
+      // Create color scale for bubble graph and bar chart
+      let gColorScale = d3.scaleOrdinal().domain(["International TV Shows","International Movies","Action & Adventure","Children & Family Movies","Comedies","Crime TV Shows","Cult Movies","Documentaries","Dramas","Faith & Spirituality","Horror Movies","Kids' TV","Independent Movies","Stand-Up Comedy","Stand-Up Comedy & Talk Shows","Sports Movies","TV Comedies","TV Dramas","Thrillers", "TV Thrillers"])
+                                           .range(["red","red","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350","#EF5350"]);
+
+      // Default circles on first load are based on 2013
       drawCircles(2013);
 
-      // draw circles
+      // Function to draw genre bubbles
       function drawCircles(slideryear) {
 
         // create title for charts
         document.getElementById('genreTitle').innerHTML = "Top 5 Genres For Titles Added In " + slideryear;
 
-        // Color scale based on genre
-        // let genreObjAll = data[year_added]["genresCount"]
-    
-        // let genreArr = []
-        // for (const [key, value] of Object.entries(genreObjAll)) {
-        //   genreArr.push(key);
-        // };
-        // console.log(genreArr)
-        
-        // let gColorScale = d3.interpolateReds(d3.scaleSymlog().domain(genreArr).range([0, 1]));
-        // let gColorScale = d3.scaleOrdinal(d3.schemeCategory10)
-
         let bubblePack = d => d3.pack()
           .size([chartWidth, chartHeight])
-          .padding(2)(d3.hierarchy({ children: genreObj[slideryear] }).sum(d => d[1]))
+          .padding(2)(d3.hierarchy({ children: genreObj[slideryear] }).sum(d => d[1]));
 
         let root = bubblePack(genreObj[slideryear]);
 
@@ -594,16 +580,14 @@
           .join(enter => enter.append("circle").data(root.children, d => d.data)
             .attr("class", "genre")
             .attr("r", d => d.r)
-            .style('fill', 'red')
-            // .style('fill', d => gColorScale(d.data[0]))
+            .style('fill', d => gColorScale(d.data[0]))
             .attr("label", d => d.data)
             .attr("opacity", 0)
             .call(enter => enter.transition().duration(200).attr("opacity", 1)),
             update => update.call(update => update.transition().duration(200).attr("opacity", 1)
               .attr("class", "genre")
               .attr("r", d => d.r)
-              .style('fill', 'red')
-              // .style('fill', d => gColorScale(d.data[0]))
+              .style('fill', d => gColorScale(d.data[0]))
               .attr("label", d => d.data)),
             exit => exit.call(exit => exit.transition().duration(300).attr('opacity', 0).remove()))
           .attr('transform', d => `translate(${d.x}, ${d.y})`);
@@ -619,14 +603,16 @@
                                 .attr('transform', d => `translate(${d.x-d.r+10}, ${d.y-d.r/4})`);
       }
 
-    // genre bar chart
+    // Initialize bottom axis for genre bar chart
     let gbottomAxis = d3.axisBottom()
     let bottomAxisG = gAnnotations.append("g")
                            .attr("class", "gAxis")
                            .attr("transform",`translate(${gMargin.left},${genreHeight+gMargin.top})`)
-    drawBars(2021);
-    // let maxGenres = d3.max(genreObj, d => {return Math.max(d[0][0])})
-    // console.log(maxGenre)
+    
+    // Default bars on page load are based on 2013
+    drawBars(2013);
+
+    // Function to draw genre bar chart
     function drawBars (slideryear) {
 
       let genres = d3.map(genreObj[slideryear], d => d[0])
@@ -636,15 +622,14 @@
       bottomAxisG.transition().duration(200).call(gbottomAxis);
 
       let genreNumber = d3.scaleLinear()
-            // .domain([0, d3.max(genreObj[slideryear], function(d){ return d[1]; })])
-            .domain([0,623])
-            .range([genreHeight,30]);
+                          .domain([0,623])
+                          .range([genreHeight,30]);
 
-      genreChart.selectAll("rect.bar")
+      genreChart.selectAll("rect.gbar")
           .data(genreObj[slideryear])
           .join(enter => enter.append('rect')
-            .attr('class', 'bar')
-            .attr('fill', 'red')
+            .attr('class', 'gbar')
+            .attr('fill', d => gColorScale(d[0]))
             .attr("x", d => genreScale(d[0]))
             .attr("y", d => genreNumber(d[1]))
             .attr("height", d => genreNumber(0) - genreNumber(d[1]))
@@ -652,7 +637,7 @@
             .attr("opacity", 0)
             .call(enter => enter.transition().duration(200).attr("opacity", 1)),
             update => update.call(update => update.transition().duration(200).attr("opacity", 1)
-              .attr('fill', 'red')
+              .attr('fill', d => gColorScale(d[0]))
               .attr("x", d => genreScale(d[0]))
               .attr("y", d => genreNumber(d[1]))
               .attr("height", d => genreNumber(0) - genreNumber(d[1]))
@@ -665,7 +650,7 @@
           .text(d => d[1] + " Titles")
           .style("font-size", 12)
           .style("fill", "white")
-          .attr("x", d => genreScale(d[0]))
+          .attr("x", d => genreScale(d[0])+(genreScale.bandwidth()/3))
           .attr('y', d => genreNumber(d[1]) - 5);
       }
 
