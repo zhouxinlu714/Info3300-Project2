@@ -1,5 +1,4 @@
 <html>
-
 <head>
   <title>INFO 3300/5100 - Project 2</title>
   <script src="https://d3js.org/d3.v6.min.js"></script>
@@ -69,6 +68,7 @@
 
     .gridlines line {
       stroke: grey;
+      opacity: 0.5;
     }
 
     .gridlines .domain {
@@ -324,8 +324,8 @@
         }
         else {
           ratingDict[rating] = 1;
-          data[year_added]["num_ratings"] += 1;
         };
+        data[year_added]["num_ratings"] += 1;
 
         // Count ratings by country
         let dict1 = data[year_added]["ratingByCountry"];
@@ -344,15 +344,6 @@
             dict1[country] = {}
             dict1[country][rating] = 1
           }
-
-        let ratingDict = data[year_added]["ratingsCount"];
-          if (rating in ratingDict) {
-            ratingDict[rating] += 1;
-          }
-          else {
-            ratingDict[rating] = 1;
-            data[year_added]["num_ratings"] += 1;
-          };
 
           // Count rating for all years
           let Allyear_ratingDict = data['All_year']["ratingsCount"];
@@ -686,6 +677,12 @@
         .offset(d3.stackOffsetNone);
 
       var annotations = svg2.append("g").attr("id", "annotations");
+
+      var xBarGrid = annotations.append("g")
+        .attr("class", "x gridlines")
+        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
+        .attr("color", 'white');
+
       var yBarAxis = annotations.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate(" + (margin2.left) + "," + margin2.top + ")")
@@ -693,11 +690,6 @@
 
       var xBarAxis = annotations.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
-        .attr("color", 'white');
-
-      var xBarGrid = annotations.append("g")
-        .attr("class", "x gridlines")
         .attr("transform", "translate(" + margin2.left + "," + (ratingHeight + margin2.top + 20) + ")")
         .attr("color", 'white');
 
@@ -719,22 +711,13 @@
         .style("fill", "white")
         .text("Titles");
 
-      // Y axis label:
-      svg2.append("text")
-        .attr("text-anchor", "end")
-        .attr("transform", "rotate(-90)")
-        .attr("y", margin2.left - 15)
-        .attr("x", -margin2.top + 40)
-        .style("fill", "white")
-        .text("Country")
-
       const color = d3.scaleOrdinal().domain(Rating_Age).range(d3.schemeReds[4]);
 
       // Add Legend
       var size = 20
       var Age_legend = svg2.append('g')
         .attr('class', 'Age_legend')
-        .attr('transform', 'translate(' + 350 + ',' + (height2 - 400) + ')')
+        .attr('transform', 'translate(' + 355 + ',' + (height2 - 400) + ')')
         .style("margin-bottom", "5px");
 
       Age_legend.selectAll('rect')
@@ -763,18 +746,6 @@
         .attr("text-anchor", "left")
         .style("alignment-baseline", "middle");
 
-      drawStack('2021');
-      // let select_year = data[2012];
-      function drawStack(current_year) {
-        let select_year = data[current_year];
-
-        for (const [country, ratings] of Object.entries(select_year.ratingByCountry)) {
-          ratings['Country'] = country
-        }
-
-        let stacked_data = Object.values(select_year.ratingByCountry)
-        let ratings = Object.keys(select_year.ratingsCount)
-
         const RATING_MAP = {
           "TV-MA": "Adult",
           "R": "Adult",
@@ -789,6 +760,18 @@
           "TV-Y": "Little Kids",
           "TV-G": "Little Kids"
         }
+
+      drawStack('2021');
+      function drawStack(current_year) {
+        let select_year = data[current_year];
+
+        for (const [country, ratings] of Object.entries(select_year.ratingByCountry)) {
+          ratings['Country'] = country
+        }
+
+        let stacked_data = Object.values(select_year.ratingByCountry)
+        let ratings = Object.keys(select_year.ratingsCount)
+
         let stacked_data2 = []
         stacked_data.forEach((d) => {
           let new_dict = {
@@ -833,9 +816,9 @@
           .tickSize(-ratingHeight - 20)
           .tickFormat("");
 
+        xBarGrid.call(bottomGridlines);
         yBarAxis.call(leftAxis);
         xBarAxis.call(bottomAxis);
-        xBarGrid.call(bottomGridlines);
 
         var series = stack(stacked_data2);
 
@@ -857,13 +840,13 @@
           .style("display", "none");
 
         let mouseover = function (d) {
-          // console.log(d3.select(this.parentNode).datum());
           d3.select(this)
             .style("stroke", "white")
           tooltip.style("left", d.pageX + 10 + "px")
             .style("top", d.pageY - 25 + "px")
             .style("display", "inline-block")
-            .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
+            .html(d3.select(this.parentNode).datum().key + ": " +  `${Math.round(d3.select(this).attr("label") / d3.select(this).attr("total") * 100)}%` );
+
         }
 
         let mousemove = function (d) {
@@ -886,6 +869,10 @@
           .attr("width", d => xScale(d[1]) - xScale(d[0]))
           .attr("height", yScale.bandwidth())
           .attr("label", d => d[1] - d[0])
+          .attr("total", d => {
+            let total = Object.values(d.data).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
+            return total;
+          })
           .on("mouseover", mouseover)
           .on("mousemove", mousemove)
           .on("mouseleave", mouseleave);
@@ -919,11 +906,6 @@
           .innerRadius(0)
           .outerRadius(radius)
 
-        const labelOffset = radius * 1.4;
-        const arcLabel = d3.arc()
-          .innerRadius(labelOffset)
-          .outerRadius(labelOffset);
-
         pie_svg.selectAll("path").remove();
         pie_svg.selectAll("line").remove();
         pie_svg.selectAll('text').remove();
@@ -953,10 +935,8 @@
             .style("top", d.pageY - 25 + "px")
             .style("display", "inline-block")
             .style("opacity", 1)
-            // .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
             .html(d3.select(this).datum().data.key + ": " + d3.select(this).datum().data.value);
         }
-        // d3.select(this).datum().properties.name
 
         let mousemove = function (d) {
           tooltip1
@@ -975,13 +955,14 @@
           .append("path")
           .attr('d', arcGenerator)
           .attr('fill', function (d) { return color1(d.data.key) })
-          // .attr("stroke", "white")
-          // .style("stroke-width", "5px")
+          .attr("stroke", "white")
+          .style("stroke-width", "2px")
           .on("mouseover", mouseover)
           .on("mousemove", mousemove)
           .on("mouseleave", mouseleave);
 
         arcs.enter().append("line")
+          .filter(d => Math.round(d.data.value / select_year.num_titles * 100) > 1)
           .attr("stroke", "white")
           .attr("x1", function (d) {
             return arcGenerator.centroid(d)[0] * 2;
@@ -990,26 +971,26 @@
             return arcGenerator.centroid(d)[1] * 2;
           })
           .attr("x2", function (d) {
-            return arcGenerator.centroid(d)[0] * 2.4;
+            return arcGenerator.centroid(d)[0] * 2.8;
           })
           .attr("y2", function (d) {
-            return arcGenerator.centroid(d)[1] * 2.4;
+            return arcGenerator.centroid(d)[1] * 2.8;
           });
 
-
-        // arcs.selectAll("line").remove();
-
-
-        var labels = pie_svg.selectAll('text')
-          .data(data_ready)
+        const labelOffset = radius * 1.6;
+        const arcLabel = d3.arc()
+          .innerRadius(labelOffset)
+          .outerRadius(labelOffset);
+        
+        let labels = pie_svg.selectAll('text')
+          .data(data_ready.filter(d => Math.round(d.data.value / select_year.num_titles * 100) > 1))
           .enter()
           .append('text')
           .style('text-anchor', 'middle')
           .style('alignment-baseline', 'middle')
-          .style('font-size', '10px')
-          .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
-
-
+          .style('font-size', '12px')
+          .attr('transform', d => `translate(${arcLabel.centroid(d)})`);
+        
         labels.append('tspan')
           .attr('y', '-0.6em')
           .attr('x', 0)
@@ -1021,44 +1002,7 @@
           .attr('y', '0.6em')
           .attr('x', 0)
           .style("fill", "white")
-          // .text(d => `${d.data.value} (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
-          .text(d => ` (${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
-
-
-
-        // // Tooltip
-        // let tooltip1 = d3.select("#piechartBody").append("div")
-        //   .attr("class", "tooltip")
-        //   .style("background-color", "white")
-        //   .style("border", "solid")
-        //   .style("border-width", "1px")
-        //   .style("border-radius", "5px")
-        //   .style("padding", "10px")
-        //   .style("position", "absolute")
-        //   .html("test");
-        //   // .style("display", "none");
-
-        // let mouseover = function (d) {
-        //   d3.select(this)
-        //     .style("stroke", "white")
-        //   tooltip1.style("left", d.pageX + 10 + "px")
-        //     .style("top", d.pageY - 25 + "px")
-        //     .style("display", "inline-block")
-        //     .style("opacity", 1)
-        //     .html(d3.select(this.parentNode).datum().key + ": " + d3.select(this).attr("label"));
-        // }
-
-        // let mousemove = function (d) {
-        //   tooltip1
-        //     .style("left", (d3.select(this)[0] + 90) + "px")
-        //     .style("top", (d3.select(this)[1]) + "px")
-        // }
-
-        // let mouseleave = function (d) {
-        //   tooltip1.style("display", "none");
-        //   d3.select(this)
-        //     .style("stroke", "none")
-        // }
+          .text(d => `(${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
       }
     }
 
