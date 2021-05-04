@@ -232,8 +232,6 @@
       // clean netflix data 7787==>7265
       let netflix_titles = await d3.csv("./netflix_titles.csv");
       netflix_titles = netflix_titles.filter((d) => { return d['country'] != '' && d['rating'] != '' && d['date_added'] != '' });
-      console.log(netflix_titles);
-
 
       // year added extent
       const year_added_extent = d3.extent(netflix_titles, d => d.date_added.split(', ')[1]);
@@ -365,8 +363,6 @@
           });
         }
       };
-
-      console.log("final data", data);
 
       // Draw countries
       map.selectAll("path.country")
@@ -555,7 +551,6 @@
         }
         genreObj[year_added] = topFive.slice(0, 5);
       };
-      console.log(genreObj)
 
       // Create color scale for bubble graph and bar chart
       let gColorScale = d3.scaleOrdinal().domain(["International TV Shows","International Movies","Action & Adventure","Children & Family Movies","Comedies","Crime TV Shows","Cult Movies","Documentaries","Dramas","Faith & Spirituality","Horror Movies","Kids' TV","Independent Movies","Stand-Up Comedy","Stand-Up Comedy & Talk Shows","Sports Movies","TV Comedies","TV Dramas","Thrillers", "TV Thrillers"])
@@ -915,13 +910,12 @@
           .style("display", "none");
 
         let mouseover = function (d) {
-          arcs.selectAll("path")
-          .transition().duration(200)
-            .style("stroke", "white")
-            .style("opacity", .4)
-        d3.select(this)
-          .transition().duration(200)
-          .style("opacity", 0.5);
+          pie_svg.selectAll("path")
+            .transition().duration(200)
+            .style("opacity", 0.5)
+          d3.select(this)
+            .transition().duration(200)
+            .style("opacity", 1);
           tooltip1.style("left", d.pageX + 10 + "px")
             .style("top", d.pageY - 25 + "px")
             .style("display", "inline-block")
@@ -937,9 +931,9 @@
 
         let mouseleave = function (d) {
           tooltip1.style("display", "none");
-          d3.select(this)
-           .transition().duration(200)
-           .style("opacity", 1)
+          pie_svg.selectAll("path")
+          .transition().duration(200)
+          .style("opacity", 1)
         }
 
         arcs.enter()
@@ -948,6 +942,7 @@
           .attr('fill', function (d) { return color1(d.data.key) })
           .attr("stroke", "white")
           .style("stroke-width", "2px")
+          .style("opacity", 1)
           .on("mouseover", mouseover)
           .on("mousemove", mousemove)
           .on("mouseleave", mouseleave);
@@ -996,10 +991,7 @@
           .text(d => `(${Math.round(d.data.value / select_year.num_titles * 100)}%)`)
       }
     }
-
     requestData();
   </script>
-
 </body>
-
 </html>
